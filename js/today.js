@@ -9,6 +9,9 @@
   var UI = W.UI;
   var Store = W.Store;
 
+  // 当前视图的日期与筛选状态：跨重渲染保留，使“筛选/切换日期”点击后持续生效
+  var state = { date: null, mode: null };
+
   function listForDate(date) {
     return Store.data.today.filter(function (t) { return t.date === date; });
   }
@@ -31,7 +34,7 @@
   // 界面添加入口：空白内容不写入并提示"无法添加空内容"
   function tryAdd(date, text) {
     var it = addItem(date, text);
-    if (!it) UI.toast('无法添加空内容');
+    if (!it) UI.toast('无法添加空内容', 'error');
     return it;
   }
 
@@ -130,8 +133,12 @@
   }
 
   function render(viewEl, topbar) {
-    var date = UI.todayStr();
-    var mode = 'all';
+    // 初始化并保留筛选/日期状态：从路由重渲染时仍展示用户上次的选择
+    if (state.date == null) state.date = UI.todayStr();
+    if (state.mode == null) state.mode = 'all';
+    var date = state.date;
+    var mode = state.mode;
+
     if (topbar) {
       var t = topbar.querySelector('#page-title'); if (t) t.textContent = '今日计划';
       var p = topbar.querySelector('#page-date'); if (p) p.textContent = UI.fmtDate(date);
@@ -141,12 +148,19 @@
     if (!viewEl) return;
     viewEl.innerHTML = build({ date: date, mode: mode });
 
+    // 空状态“添加一条”按钮：聚焦输入框（每次渲染重建的按钮，绑定无累积风险）
+    var emptyAction = viewEl.querySelector('.empty-action');
+    if (emptyAction) emptyAction.addEventListener('click', function () {
+      var inpEl = viewEl.querySelector('#today-input');
+      if (inpEl) inpEl.focus();
+    });
+
     var inp = viewEl.querySelector('#today-input');
     var addBtn = viewEl.querySelector('#today-add');
     function doAdd() {
       if (!inp) return;
       var it = tryAdd(date, inp.value);
-      if (it) { inp.value = ''; W.Router && W.Router.reload(); }
+      if (it) { inp.value = ''; rerender(); }
     }
     if (addBtn) addBtn.addEventListener('click', doAdd);
     if (inp) inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') doAdd(); });
@@ -157,35 +171,42 @@
         var li = e.target.closest ? e.target.closest('li') : null;
         if (!li) return;
         var id = li.getAttribute('data-id');
-        if (e.target.classList.contains('todo-check')) { toggle(id); W.Router.reload(); }
+        if (e.target.classList.contains('todo-check')) { toggle(id); rerender(); }
         else if (e.target.classList.contains('todo-del')) {
-          if (UI.confirm({ title: '删除待办', message: '确定删除这条计划吗？' })) { remove(id); W.Router.reload(); }
+          if (UI.confirm({ title: '删除待办', message: '确定删除这条计划吗？' })) { remove(id); rerender(); }
         } else if (e.target.classList.contains('todo-edit')) {
           var it = find(id);
           var nv = W.prompt ? W.prompt('编辑内容', it ? it.text : '') : null;
-          if (nv != null) { updateText(id, nv); W.Router.reload(); }
+          if (nv != null) { updateText(id, nv); rerender(); }
         }
       });
     }
 
-    bindDateAndFilter(viewEl, date, mode);
+    bindDateAndFilter(viewEl);
   }
 
-  function bindDateAndFilter(viewEl, date, mode) {
+  // 以当前 state（日期 + 筛选）重新渲染今日计划视图，确保选择持续生效
+  function rerender() {
+    var viewEl = W.document && W.document.getElementById ? W.document.getElementById('view') : null;
+    var topbar = W.document && W.document.getElementById ? W.document.getElementById('topbar') : null;
+    render(viewEl, topbar);
+  }
+
+  function bindDateAndFilter(viewEl) {
     var prev = viewEl.querySelector('#today-prev');
     var next = viewEl.querySelector('#today-next');
     var todayBtn = viewEl.querySelector('#today-today');
     var filter = viewEl.querySelector('#today-filter');
-    if (prev) prev.addEventListener('click', function () { rerender(shiftDate(date, -1), mode); });
-    if (next) next.addEventListener('click', function () { rerender(shiftDate(date, 1), mode); });
-    if (todayBtn) todayBtn.addEventListener('click', function () { rerender(UI.todayStr(), mode); });
+    if (prev) prev.addEventListener('click', function () { state.date = shiftDate(state.date, -1); rerender(); });
+    if (next) next.addEventListener('click', function () { state.date = shiftDate(state.date, 1); rerender(); });
+    if (todayBtn) todayBtn.addEventListener('click', function () { state.date = UI.todayStr(); rerender(); });
     if (filter) filter.addEventListener('click', function (e) {
       var b = e.target.closest ? e.target.closest('button') : null;
       if (!b) return;
-      rerender(date, b.getAttribute('data-mode') || 'all');
+      state.mode = b.getAttribute('data-mode') || 'all';
+      rerender();
     });
   }
-  function rerender(d, m) { if (W.Router) W.Router.reload(); }
 
   var Today = {
     listForDate: listForDate,
