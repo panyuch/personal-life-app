@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>毛玻璃风格预览 · 我的专属 App</title>
+<style>
+  /* ===== 通用重置 ===== */
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  /* ===== 预览选择器（悬浮在右上，仅预览用）===== */
+  #preview-bar {
+    position: fixed; top: 14px; right: 14px; z-index: 1000;
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 14px;
+    background: rgba(255,255,255,0.5);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid rgba(255,255,255,0.55);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    font-size: 12px;
+  }
+  #preview-bar span { color: #475569; font-weight: 600; }
+  .variant-switch { display: inline-flex; border-radius: 10px; overflow: hidden;
+    border: 1px solid rgba(15,23,42,0.12); }
+  .variant-switch button {
+    border: none; cursor: pointer; padding: 6px 12px; font-size: 12px;
+    background: rgba(255,255,255,0.35); color: #334155; font-weight: 600;
+  }
+  .variant-switch button.active { background: var(--theme-color); color: #fff; }
+
+  /* ===== 壁纸（毛玻璃透出的底色）===== */
+  #wallpaper {
+    position: fixed; inset: 0; z-index: -2;
+    transition: background 0.5s ease;
+  }
+  /* 漂浮光斑，让模糊更有层次 */
+  #wallpaper::before, #wallpaper::after {
+    content: ""; position: absolute; border-radius: 50%;
+    filter: blur(60px); opacity: 0.85; transition: background 0.5s ease;
+  }
+  #wallpaper::before { width: 480px; height: 480px; top: -120px; left: -80px; }
+  #wallpaper::after  { width: 520px; height: 520px; bottom: -160px; right: -100px; }
+
+  /* 变体 A：浅色磨砂（macOS 浅色活力）*/
+  body[data-variant="A"] {
+    --theme-color: #2f6df6;
+    --text: #1f2937; --text-soft: #64748b;
+    --glass: rgba(255,255,255,0.55);
+    --glass-strong: rgba(255,255,255,0.72);
+    --glass-border: rgba(255,255,255,0.65);
+    --glass-shadow: 0 12px 40px rgba(31,41,55,0.18);
+    --chip: rgba(255,255,255,0.5);
+    --input-bg: rgba(255,255,255,0.55);
+  }
+  body[data-variant="A"] #wallpaper {
+    background: linear-gradient(135deg, #cfe0ff 0%, #e7d3fc 48%, #ffd9c9 100%);
+  }
+  body[data-variant="A"] #wallpaper::before { background: #8ab6ff; }
+  body[data-variant="A"] #wallpaper::after  { background: #ffb3c8; }
+
+  /* 变体 B：深色沉浸（macOS 深色 Vibrancy）*/
+  body[data-variant="B"] {
+    --theme-color: #4c8dff;
+    --text: #f1f5f9; --text-soft: #a9b4c6;
+    --glass: rgba(30,41,59,0.45);
+    --glass-strong: rgba(30,41,59,0.62);
+    --glass-border: rgba(255,255,255,0.14);
+    --glass-shadow: 0 16px 50px rgba(0,0,0,0.45);
+    --chip: rgba(255,255,255,0.1);
+    --input-bg: rgba(255,255,255,0.08);
+  }
+  body[data-variant="B"] #wallpaper {
+    background: linear-gradient(135deg, #0a0f1f 0%, #161a35 55%, #241433 100%);
+  }
+  body[data-variant="B"] #wallpaper::before { background: #3b4fd1; opacity: 0.6; }
+  body[data-variant="B"] #wallpaper::after  { background: #8b2fd6; opacity: 0.5; }
+
+  /* 变体 C：彩色活力（更饱和的渐变 + 明显玻璃染色）*/
+  body[data-variant="C"] {
+    --theme-color: #7c5cff;
+    --text: #1e1b2e; --text-soft: #5b5570;
+    --glass: rgba(255,255,255,0.42);
+    --glass-strong: rgba(255,255,255,0.6);
+    --glass-border: rgba(255,255,255,0.6);
+    --glass-shadow: 0 14px 44px rgba(76,29,149,0.28);
+    --chip: rgba(255,255,255,0.5);
+    --input-bg: rgba(255,255,255,0.5);
+  }
+  body[data-variant="C"] #wallpaper {
+    background: linear-gradient(135deg, #b5f3ff 0%, #c4b5fd 50%, #fbcfe8 100%);
+  }
+  body[data-variant="C"] #wallpaper::before { background: #5eead4; }
+  body[data-variant="C"] #wallpaper::after  { background: #f0abfc; }
+
+  /* ===== 布局骨架 ===== */
+  #app { display: flex; min-height: 100vh; }
+
+  /* 侧边栏：毛玻璃 */
+  #sidebar {
+    width: 224px; flex: 0 0 224px;
+    margin: 14px 0 14px 14px;
+    padding: 18px 12px;
+    border-radius: 20px;
+    background: var(--glass);
+    backdrop-filter: saturate(180%) blur(24px);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    display: flex; flex-direction: column;
+  }
+  #sidebar .brand {
+    font-size: 16px; font-weight: 800; color: var(--theme-color);
+    padding: 6px 12px 14px; letter-spacing: 0.3px;
+  }
+  #sidebar nav { display: flex; flex-direction: column; gap: 4px; }
+  #sidebar nav a {
+    text-decoration: none; color: var(--text-soft);
+    padding: 9px 14px; border-radius: 11px; font-weight: 600;
+    transition: background 0.18s, color 0.18s;
+    display: flex; align-items: center; gap: 9px;
+  }
+  #sidebar nav a .ico { font-size: 15px; }
+  #sidebar nav a:hover { background: var(--chip); color: var(--text); }
+  #sidebar nav a.active {
+    background: color-mix(in srgb, var(--theme-color) 22%, transparent);
+    color: var(--theme-color);
+  }
+
+  /* 主内容区 */
+  #content { flex: 1; display: flex; flex-direction: column; min-width: 0;
+    margin: 14px; }
+
+  /* 顶栏：毛玻璃 + 红黄绿交通灯（macOS 味道）*/
+  #topbar {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 20px; border-radius: 20px 20px 0 0;
+    background: var(--glass-strong);
+    backdrop-filter: saturate(180%) blur(24px);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    border: 1px solid var(--glass-border);
+    border-bottom: none;
+  }
+  #lights { display: flex; gap: 8px; }
+  #lights i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  #lights .r { background: #ff5f57; } #lights .y { background: #febc2e; } #lights .g { background: #28c840; }
+  #page-title { font-size: 17px; margin: 0; font-weight: 700; }
+  #page-date { color: var(--text-soft); font-size: 13px; }
+  #primary-btn {
+    margin-left: auto; background: var(--theme-color); color: #fff;
+    border: none; padding: 8px 16px; border-radius: 11px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-color) 40%, transparent);
+  }
+  #primary-btn:hover { filter: brightness(1.06); }
+
+  /* 视图区：毛玻璃大面板 */
+  #view {
+    padding: 22px 24px; border-radius: 0 0 20px 20px;
+    background: var(--glass);
+    backdrop-filter: saturate(180%) blur(24px);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    flex: 1;
+  }
+
+  /* 问候条 */
+  .greeting { margin-bottom: 18px; }
+  .greeting .hi { font-size: 22px; font-weight: 800; }
+  .greeting .sub { color: var(--text-soft); font-size: 13px; }
+
+  /* 卡片网格 */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 16px; }
+  .card {
+    background: var(--glass-strong);
+    backdrop-filter: saturate(160%) blur(16px);
+    -webkit-backdrop-filter: saturate(160%) blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 18px; padding: 16px 18px;
+    box-shadow: 0 6px 20px rgba(15,23,42,0.10);
+  }
+  .card h3 { margin: 0 0 10px; font-size: 15px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px; }
+  .card .card-sub { color: var(--text-soft); font-size: 13px; }
+  .card .more { margin-top: 10px; font-size: 12px; color: var(--theme-color); font-weight: 600; }
+
+  /* 列表项 */
+  ul.list { list-style: none; margin: 0; padding: 0; }
+  ul.list li { display: flex; align-items: center; gap: 10px;
+    padding: 8px 4px; border-bottom: 1px solid color-mix(in srgb, var(--glass-border) 70%, transparent); }
+  ul.list li:last-child { border-bottom: none; }
+  ul.list li .grow { flex: 1; min-width: 0; }
+  .done-text { text-decoration: line-through; color: var(--text-soft); }
+
+  /* 复选框（毛玻璃感）*/
+  .chk { width: 18px; height: 18px; border-radius: 6px; border: 1.5px solid var(--theme-color);
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: 0 0 auto;
+    background: rgba(255,255,255,0.3); }
+  .chk.on { background: var(--theme-color); color: #fff; font-size: 12px; }
+
+  /* 输入 */
+  input[type="text"] {
+    width: 100%; padding: 8px 12px; border-radius: 11px;
+    border: 1px solid var(--glass-border); background: var(--input-bg);
+    color: var(--text); font-size: 13px; outline: none;
+  }
+  input[type="text"]:focus { border-color: var(--theme-color); }
+
+  /* 徽标数字 */
+  .pill { display: inline-flex; padding: 3px 10px; border-radius: 999px;
+    background: var(--chip); font-size: 12px; font-weight: 700; color: var(--text);
+    border: 1px solid var(--glass-border); }
+  .pill.warn { color: #d4455f; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+</style>
+</head>
+<body data-variant="A">
+  <div id="wallpaper"></div>
+
+  <div id="preview-bar">
+    <span>预览风格</span>
+    <div class="variant-switch">
+      <button data-v="A" class="active">浅色磨砂</button>
+      <button data-v="B">深色沉浸</button>
+      <button data-v="C">彩色活力</button>
+    </div>
+  </div>
+
+  <div id="app">
+    <aside id="sidebar">
+      <div class="brand">我的专属 App</div>
+      <nav>
+        <a href="#" class="active"><span class="ico">🏠</span>首页总览</a>
+        <a href="#"><span class="ico">📝</span>今日计划</a>
+        <a href="#"><span class="ico">💼</span>工作计划</a>
+        <a href="#"><span class="ico">🏋️</span>健身计划</a>
+        <a href="#"><span class="ico">🍎</span>饮食计划</a>
+        <a href="#"><span class="ico">⚙️</span>数据与设置</a>
+      </nav>
+    </aside>
+
+    <main id="content">
+      <header id="topbar">
+        <div id="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+        <h1 id="page-title">首页总览</h1>
+        <span id="page-date">2026年8月17日 周一</span>
+        <button id="primary-btn">+ 新建</button>
+      </header>
+      <section id="view">
+        <div class="greeting">
+          <div class="hi">下午好，pyc 👋</div>
+          <div class="sub">今天是 2026年8月17日，来看看今天的状态吧</div>
+        </div>
+
+        <div class="grid">
+          <!-- 今日计划卡 -->
+          <div class="card">
+            <h3>📝 今日计划</h3>
+            <ul class="list">
+              <li><span class="chk on">✓</span><span class="grow done-text">回复客户邮件</span></li>
+              <li><span class="chk"></span><span class="grow">整理周报</span></li>
+              <li><span class="chk"></span><span class="grow">预订机票</span></li>
+            </ul>
+            <div class="more">查看全部 →</div>
+          </div>
+
+          <!-- 快速备忘卡 -->
+          <div class="card">
+            <h3>💡 快速备忘</h3>
+            <input type="text" placeholder="随手记点什么…" />
+            <ul class="list" style="margin-top:10px;">
+              <li><span class="chk on">✓</span><span class="grow done-text">买牛奶</span></li>
+              <li><span class="chk"></span><span class="grow">给妈妈打电话</span></li>
+            </ul>
+          </div>
+
+          <!-- 工作计划摘要卡 -->
+          <div class="card">
+            <h3>💼 工作计划</h3>
+            <div class="row">
+              <span class="pill">今日到期 2</span>
+              <span class="pill warn">逾期 1</span>
+              <span class="pill">进行中 3</span>
+            </div>
+            <div class="card-sub" style="margin-top:10px;">点此进入工作计划模块 →</div>
+          </div>
+
+          <!-- 健身计划摘要卡 -->
+          <div class="card">
+            <h3>🏋️ 健身计划</h3>
+            <div class="card-sub">今天：<b>胸 + 三头</b> 训练</div>
+            <div class="card-sub" style="margin-top:6px;">最近体重 <b>68.5 kg</b>（8/15）</div>
+            <div class="more">查看趋势 →</div>
+          </div>
+
+          <!-- 饮食计划摘要卡 -->
+          <div class="card">
+            <h3>🍎 饮食计划</h3>
+            <div class="card-sub">今日已记录 · 热量 <b>1480</b> / 2000 kcal</div>
+            <div style="height:8px;border-radius:999px;background:var(--chip);margin-top:12px;overflow:hidden;">
+              <div style="width:74%;height:100%;background:var(--theme-color);border-radius:999px;"></div>
+            </div>
+          </div>
+
+          <!-- 设置/数据卡 -->
+          <div class="card">
+            <h3>⚙️ 数据与设置</h3>
+            <div class="card-sub">昵称：pyc ｜ 主题色可换</div>
+            <div class="row" style="margin-top:10px;">
+              <span class="pill">导出备份</span>
+              <span class="pill">导入恢复</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    var btns = document.querySelectorAll('.variant-switch button');
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.body.setAttribute('data-variant', b.getAttribute('data-v'));
+        btns.forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>我的专属 App</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <div class="brand">我的专属 App</div>
+      <nav>
+        <a href="#/home"    data-route="home">首页总览</a>
+        <a href="#/today"   data-route="today">今日计划</a>
+        <a href="#/work"    data-route="work">工作计划</a>
+        <a href="#/fitness" data-route="fitness">健身计划</a>
+        <a href="#/diet"    data-route="diet">饮食计划</a>
+        <a href="#/settings" data-route="settings">数据与设置</a>
+      </nav>
+    </aside>
+    <main id="content">
+      <header id="topbar">
+        <h1 id="page-title">首页总览</h1>
+        <span id="page-date"></span>
+        <button id="primary-btn"></button>
+      </header>
+      <section id="view"></section>
+    </main>
+  </div>
+
+  <!-- 加载顺序：数据层 → 工具 → 路由 → 各视图 → 入口（经典 script，file:// 可用） -->
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/router.js"></script>
+  <script src="js/home.js"></script>
+  <script src="js/today.js"></script>
+  <script src="js/work.js"></script>
+  <script src="js/fitness.js"></script>
+  <script src="js/diet.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
