@@ -19,7 +19,7 @@
       today: [], // { id, date:'YYYY-MM-DD', text, done, createdAt }
       // 工作计划：卡片式。每张计划卡 = { id, name, items:[{id,text,done}] }
       work: { plans: [] },
-      fitness: { templates: [], checkins: [], body: [] },
+      fitness: { templates: [], checkins: [], body: [], schedule: {} },
       diet: { targetKcal: null, foods: [], days: {} },
       memo: [], // { id, text, done, createdAt }
     };
@@ -71,6 +71,7 @@
       out.fitness.templates = Array.isArray(d.fitness.templates) ? d.fitness.templates : [];
       out.fitness.checkins = Array.isArray(d.fitness.checkins) ? d.fitness.checkins : [];
       out.fitness.body = Array.isArray(d.fitness.body) ? d.fitness.body : [];
+      out.fitness.schedule = (d.fitness.schedule && typeof d.fitness.schedule === 'object') ? d.fitness.schedule : {};
     }
     if (d.diet && typeof d.diet === 'object') {
       out.diet.targetKcal = d.diet.targetKcal != null ? d.diet.targetKcal : null;

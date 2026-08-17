@@ -137,6 +137,23 @@ input[type="text"], input[type="date"], input[type="number"], textarea, select {
 .btn-danger { color: #dc2626; border-color: #fecaca; }
 .btn-sm { padding: 4px 9px; font-size: 12px; }
 
+/* 添加行：输入框与按钮同行，输入框占满剩余空间、按钮固定在右侧 */
+.add-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.add-row input[type="text"],
+.add-row input[type="number"] {
+  flex: 1 1 auto;
+  width: auto; /* 覆盖通用 input 的 width:100%，避免按钮被挤到下一行 */
+}
+.add-row .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 /* 列表 */
 ul.list { list-style: none; margin: 0; padding: 0; }
 ul.list li {
@@ -203,3 +220,142 @@ ul.list li .grow { flex: 1; min-width: 0; }
 .work-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .work-card-title { margin: 0; font-size: 20px; font-weight: 700; }
 .work-card-body { margin-top: 12px; }
+
+/* 标题左侧组：标题 + 删除计划按钮 */
+.work-card-head-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.work-card-head-left .work-card-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.work-card-head-right { flex: 0 0 auto; display: flex; align-items: center; }
+.icon-btn {
+  border: none; background: transparent; color: var(--text-soft);
+  cursor: pointer; font-size: 14px; line-height: 1; padding: 4px 7px; border-radius: 6px;
+}
+.icon-btn:hover { background: var(--bg); color: #dc2626; }
+
+/* 卡片下半部分：工作内容输入框（回车添加） */
+.work-content-input-row { display: flex; align-items: stretch; gap: 8px; margin-bottom: 12px; }
+.work-content-input-row input[type="text"] { flex: 1 1 auto; width: auto; }
+.work-content-input-row .btn { flex: 0 0 auto; white-space: nowrap; }
+
+/* 已添加的工作内容清单：字号小于标题（13px vs 20px） */
+.work-items { list-style: none; margin: 0; padding: 0; }
+.work-items .work-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 4px; border-bottom: 1px dashed var(--border);
+}
+.work-items .work-item:last-child { border-bottom: none; }
+.work-items .work-item-check { flex: 0 0 auto; width: 16px; height: 16px; cursor: pointer; }
+.work-items .item-text {
+  flex: 1 1 auto; min-width: 0; font-size: 13px; line-height: 1.5;
+  word-break: break-word; transition: color 0.15s;
+}
+.work-items .item-text.done { text-decoration: line-through; color: var(--text-soft); }
+.work-items .work-item-del { flex: 0 0 auto; }
+.work-empty-hint { padding: 10px 4px; color: var(--text-soft); font-size: 13px; }
+
+/* 响应式：窄屏（≤720px）下，侧边栏转为顶部导航，卡片头堆叠，适配移动端 */
+@media (max-width: 720px) {
+  #app { flex-direction: column; }
+  #sidebar {
+    width: 100%; flex: none; height: auto; position: static;
+    border-right: none; border-bottom: 1px solid var(--border); padding: 10px 12px;
+  }
+  #sidebar nav { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+  #sidebar .brand { padding: 4px 12px 8px; }
+  #topbar { padding: 14px 16px; }
+  #view { padding: 16px; }
+  .work-card-head { flex-direction: column; align-items: stretch; gap: 10px; }
+  .work-card-head-right { justify-content: flex-start; }
+}
+
+/* ===== 健身计划·月历日程表（重构） ===== */
+.cal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+  margin-bottom: 18px;
+}
+.cal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cal-title { font-size: 17px; font-weight: 700; }
+.cal-head-right { display: flex; align-items: center; gap: 16px; }
+.cal-nav { display: inline-flex; align-items: center; gap: 8px; }
+.cal-nav .icon-btn { font-size: 18px; padding: 2px 10px; }
+.cal-month { font-size: 15px; font-weight: 600; min-width: 84px; text-align: center; }
+.cal-date { color: var(--text-soft); font-size: 13px; white-space: nowrap; }
+
+.cal-toolbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin: 14px 0 10px;
+}
+.cal-hint { color: var(--text-soft); font-size: 12.5px; }
+
+.cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); }
+.cal-wd { text-align: center; font-size: 12px; color: var(--text-soft); padding: 6px 0; font-weight: 600; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 4px; }
+.cal-cell {
+  position: relative;
+  min-height: 70px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.cal-cell:hover { background: var(--bg); }
+.cal-cell.cal-blank { background: transparent; border-color: transparent; cursor: default; }
+.cal-cell.cal-blank:hover { background: transparent; }
+.cal-daynum { font-size: 13px; color: var(--text-soft); font-weight: 600; }
+.cal-cell.today .cal-daynum { color: var(--theme-color); }
+.cal-cell.selected { border-color: var(--theme-color); box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-color) 22%, transparent); }
+.cal-part {
+  display: block; width: 100%; margin-top: 6px;
+  background: none; border: none; padding: 0;
+  font-size: 20px; font-weight: 800; line-height: 1.1; cursor: pointer;
+  text-align: left;
+}
+.cal-part:hover { text-decoration: underline; }
+.cal-check {
+  position: absolute; right: 7px; bottom: 6px;
+  color: #16a34a; font-weight: 900; font-size: 17px;
+  line-height: 1;
+}
+body[data-theme="dark"] .cal-check { color: #4ade80; }
+
+/* 身体数据 + ECharts */
+.cal-body-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.cal-body-head h3 { margin: 0; font-size: 15px; }
+.echart-box { width: 100%; height: 280px; }
+.echart-empty { color: var(--text-soft); font-size: 13px; padding: 40px 0; text-align: center; border: 1px dashed var(--border); border-radius: 10px; }
+
+/* 弹窗表单 */
+.field { display: block; margin-bottom: 14px; }
+.field > span { display: block; margin-bottom: 6px; color: var(--text-soft); font-size: 13px; }
+
+/* 当日训练详情 */
+.card-link { display: inline-block; color: var(--theme-color); text-decoration: none; font-size: 14px; margin-bottom: 12px; font-weight: 600; }
+.card-link:hover { text-decoration: underline; }
+.detail-card { margin-top: 4px; }
+.detail-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.detail-head h3 { margin: 0; font-size: 16px; }
+.detail-part { font-weight: 800; font-size: 16px; }
+.detail-banner {
+  background: color-mix(in srgb, #16a34a 14%, transparent);
+  color: #15803d; border: 1px solid #bbf7d0; border-radius: 10px;
+  padding: 12px 14px; font-weight: 700; margin-bottom: 14px; text-align: center;
+}
+body[data-theme="dark"] .detail-banner { color: #4ade80; border-color: #166534; }
+.ex-progress { color: var(--text-soft); font-size: 13px; margin-bottom: 12px; }
+.ex-progress b { color: var(--theme-color); font-size: 15px; }
+.ex-list li { cursor: default; }
+.ex-list .ex-check { flex: 0 0 auto; width: 18px; height: 18px; cursor: pointer; margin-right: 4px; }
+.detail-foot { margin-top: 16px; display: flex; justify-content: flex-end; }
+
+/* 窄屏：日历网格更紧凑 */
+@media (max-width: 720px) {
+  .cal-cell { min-height: 56px; padding: 4px 5px; }
+  .cal-part { font-size: 16px; }
+  .cal-head { flex-direction: column; align-items: stretch; gap: 8px; }
+  .cal-head-right { justify-content: space-between; }
+}
