@@ -195,12 +195,13 @@
     var r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
     return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
   }
-  function disposeChart() { if (chart) { try { chart.dispose(); } catch (e) {} chart = null; } }
+  function disposeChart() { unbindResize(); if (chart) { try { chart.dispose(); } catch (e) {} chart = null; } }
 
   function renderChart(dom) {
     if (!W.echarts || !dom) return;
     disposeChart();
     chart = W.echarts.init(dom);
+    bindResize();
     var data = trendData();
     var dates = data.map(function (d) { return d.date; });
     var weights = data.map(function (d) { return d.weight; });
@@ -430,9 +431,21 @@
     renderCalendar(viewEl, topbar);
   }
 
-  if (!W.__fitResizeBound) {
-    W.addEventListener('resize', function () { if (chart) chart.resize(); });
-    W.__fitResizeBound = true;
+  // 窗口缩放时重绘图表：仅在图表创建后按需绑定（且仅一次），disposeChart 时解绑，
+  // 既避免在 Node 测试基座（mock window 无 addEventListener）加载即崩溃，也消除全局监听泄漏。
+  function onResize() { if (chart) { try { chart.resize(); } catch (e) {} } }
+  function bindResize() {
+    if (W.__fitResizeBound) return;
+    if (typeof W.addEventListener === 'function') {
+      W.addEventListener('resize', onResize);
+      W.__fitResizeBound = true;
+    }
+  }
+  function unbindResize() {
+    if (W.__fitResizeBound && typeof W.removeEventListener === 'function') {
+      W.removeEventListener('resize', onResize);
+    }
+    W.__fitResizeBound = false;
   }
 
   var Fitness = {
