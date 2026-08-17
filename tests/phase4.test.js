@@ -1,6 +1,7 @@
 /*
- * 阶段4 测试：健身计划（fitness.js）
- * 覆盖：训练模板 CRUD、打卡（模板预填/勾完成）、身体数据、体重趋势、摘要、数据隔离。
+ * 阶段4 测试：健身计划（fitness.js，月历日程重构版）
+ * 覆盖：训练日程安排（setPart / getDay / removeDay）、训练动作完成（toggleExercise / dayComplete / doneCount）、
+ *      身体数据（addBody / removeBody / trendData）、摘要（summary）、数据隔离与渲染冒烟。
  */
 'use strict';
 const H = require('./harness');
@@ -12,48 +13,57 @@ const Fitness = mods.fitness;
 function reset() { storage.clear(); Store.load(); }
 const REF = '2026-08-17';
 
-H.section('训练模板');
-H.test('addTemplate + addExercise + removeExercise', function () {
+H.section('训练日程安排');
+H.test('setPart 安排部位并预置 5 个默认动作', function () {
   reset();
-  const t = Fitness.addTemplate('推日');
-  H.ok(t && t.id, '应返回模板');
-  Fitness.addExercise(t.id, { name: '卧推', sets: 3, reps: 10, weight: 40 });
-  Fitness.addExercise(t.id, { name: '肩推', sets: 3, reps: 12, weight: 20 });
-  H.eq(Fitness.findTemplate(t.id).exercises.length, 2, '应有 2 个动作');
-  Fitness.removeExercise(t.id, 0);
-  H.eq(Fitness.findTemplate(t.id).exercises.length, 1, '删除后应剩 1 个动作');
+  Fitness.setPart(REF, '背');
+  const d = Fitness.getDay(REF);
+  H.ok(d && d.part === '背', '应记录部位 背');
+  H.eq(d.exercises.length, 5, '应预置 5 个动作');
+  H.eq(d.exercises[0].done, false, '默认未完成');
 });
-H.test('removeTemplate 删除模板', function () {
+H.test('setPart 换部位会重置动作', function () {
   reset();
-  const t = Fitness.addTemplate('A');
-  Fitness.addExercise(t.id, { name: 'x' });
-  H.ok(Fitness.removeTemplate(t.id), '应删除成功');
-  H.eq(Store.data.fitness.templates.length, 0, '模板应清空');
+  Fitness.setPart(REF, '背');
+  Fitness.toggleExercise(REF, 0);
+  H.eq(Fitness.getDay(REF).exercises[0].done, true, '背日第1个已完成');
+  Fitness.setPart(REF, '腿');
+  const d = Fitness.getDay(REF);
+  H.eq(d.part, '腿', '部位应变为 腿');
+  H.eq(d.exercises.length, 5, '动作数仍为 5');
+  H.eq(d.exercises[0].done, false, '换部位后动作应重置为未完成');
+});
+H.test('removeDay 删除当天安排', function () {
+  reset();
+  Fitness.setPart(REF, '胸');
+  H.ok(Fitness.removeDay(REF), '应删除成功');
+  H.eq(Fitness.getDay(REF), null, '当天应无安排');
+  H.eq(Fitness.removeDay(REF), false, '重复删除返回 false');
 });
 
-H.section('训练打卡');
-H.test('从模板打卡会预填动作', function () {
+H.section('训练动作完成');
+H.test('toggleExercise 切换完成态', function () {
   reset();
-  const t = Fitness.addTemplate('腿日');
-  Fitness.addExercise(t.id, { name: '深蹲', sets: 3, reps: 10, weight: 50 });
-  const c = Fitness.addCheckin({ templateId: t.id, date: REF });
-  H.eq(c.items.length, 1, '应预填 1 个动作');
-  H.eq(c.items[0].name, '深蹲', '动作名应为深蹲');
-  H.eq(c.items[0].done, false, '默认未完成');
+  Fitness.setPart(REF, '肩');
+  H.ok(Fitness.toggleExercise(REF, 1), '应切换成功');
+  H.eq(Fitness.getDay(REF).exercises[1].done, true, '第2个应标记完成');
+  Fitness.toggleExercise(REF, 1);
+  H.eq(Fitness.getDay(REF).exercises[1].done, false, '再次切换回未完成');
 });
-H.test('空白模板打卡不预填', function () {
+H.test('dayComplete 当 5 个动作全完成时为真', function () {
   reset();
-  const c = Fitness.addCheckin({ date: REF });
-  H.eq(c.items.length, 0, '无模板应无动作');
-  H.eq(c.templateId, null, 'templateId 应为 null');
+  Fitness.setPart(REF, '有氧');
+  H.notOk(Fitness.dayComplete(REF), '初始未完成');
+  for (let i = 0; i < 5; i++) Fitness.toggleExercise(REF, i);
+  H.ok(Fitness.dayComplete(REF), '全 5 个完成应为真');
 });
-H.test('toggleCheckinItem 切换完成', function () {
+H.test('doneCount 统计已完成数', function () {
   reset();
-  const t = Fitness.addTemplate('A');
-  Fitness.addExercise(t.id, { name: 'x' });
-  const c = Fitness.addCheckin({ templateId: t.id, date: REF });
-  Fitness.toggleCheckinItem(c.id, 0);
-  H.eq(Fitness.findCheckin(c.id).items[0].done, true, '应标记为完成');
+  Fitness.setPart(REF, '腿');
+  H.eq(Fitness.doneCount(REF), 0, '初始 0 个');
+  Fitness.toggleExercise(REF, 0);
+  Fitness.toggleExercise(REF, 2);
+  H.eq(Fitness.doneCount(REF), 2, '已完成 2 个');
 });
 
 H.section('身体数据');
@@ -67,6 +77,7 @@ H.test('addBody 录入体重', function () {
 H.test('addBody 无效体重被拒绝', function () {
   reset();
   H.eq(Fitness.addBody({ weight: 'abc' }), null, '非数字应返回 null');
+  H.eq(Fitness.addBody({ weight: '' }), null, '空体重应返回 null');
   H.eq(Store.data.fitness.body.length, 0, '不应写入');
 });
 H.test('removeBody 删除', function () {
@@ -87,39 +98,36 @@ H.test('trendData 按日期升序', function () {
   H.eq(td[2].date, '2026-08-18', '最后一条应最晚');
   H.eq(td[1].weight, 70, '中间权重 70');
 });
-H.test('summary 今日训练 + 最近体重', function () {
+H.test('summary 今日训练部位 + 最近体重', function () {
   reset();
-  const t = Fitness.addTemplate('晨练');
-  Fitness.addCheckin({ templateId: t.id, date: REF });
+  Fitness.setPart(REF, '背');
   Fitness.addBody({ date: '2026-08-16', weight: 71 });
   Fitness.addBody({ date: '2026-08-20', weight: 69 });
   const s = Fitness.summary(REF);
-  H.eq(s.trainedToday, '晨练', '今日训练应为模板名');
+  H.eq(s.trainedToday, '背', '今日训练应为部位 背');
   H.eq(s.latestWeight.weight, 69, '最近体重 69');
   H.eq(s.latestWeight.date, '2026-08-20', '最近体重日期');
 });
 H.test('summary 无训练日 trainedToday 为 null', function () {
   reset();
   const s = Fitness.summary(REF);
-  H.eq(s.trainedToday, null, '无打卡应为 null');
+  H.eq(s.trainedToday, null, '无安排应为 null');
 });
 
 H.section('数据隔离与渲染');
 H.test('健身改动不污染今日/工作计划', function () {
   reset();
-  const t = Fitness.addTemplate('A');
-  Fitness.addCheckin({ templateId: t.id, date: REF });
+  Fitness.setPart(REF, '胸');
   Fitness.addBody({ weight: 70 });
   H.eq(Store.data.today.length, 0, 'today 不应受影响');
   H.eq(Store.data.work.plans.length, 0, 'work 不应受影响');
 });
-H.test('build 含模板名与体重趋势 SVG', function () {
+H.test('build 含日程标题与空状态引导', function () {
   reset();
-  Fitness.addTemplate('腿日');
-  Fitness.addBody({ date: '2026-08-16', weight: 70 });
   const html = Fitness.build();
-  H.includes(html, '腿日', '应显示模板名');
-  H.includes(html, '<svg', '应包含趋势 SVG');
+  H.includes(html, '训练日程', '应显示日程标题');
+  H.includes(html, '身体数据', '应显示身体数据区');
+  H.includes(html, '暂无身体数据', '无数据时应有引导文案');
 });
 H.test('render 不抛错（冒烟）', function () {
   reset();

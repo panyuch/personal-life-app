@@ -36,7 +36,7 @@ H.test('改动工作计划不影响今日/健身/饮食/备忘', function () {
 });
 H.test('改动健身不影响今日/工作/饮食/备忘', function () {
   reset();
-  const t = Fitness.addTemplate('T'); Fitness.addCheckin({ templateId: t.id, date: REF }); Fitness.addBody({ weight: 70 });
+  Fitness.setPart(REF, '背'); Fitness.addBody({ weight: 70 });
   H.eq(Store.data.today.length, 0, 'today 不变');
   H.eq(Store.data.work.plans.length, 0, 'work 不变');
   H.eq(Store.data.diet.foods.length, 0, 'diet 不变');
@@ -44,7 +44,7 @@ H.test('改动健身不影响今日/工作/饮食/备忘', function () {
 });
 H.test('改动饮食不影响今日/工作/健身/备忘', function () {
   reset();
-  Diet.addFood(REF, 'breakfast', { name: 'x', kcal: 100 }); Diet.addLibraryFood({ name: 'y' });
+  Diet.addEntry(REF, 'breakfast', { name: 'x', grams: 100, nutrition: { kcal: 100 } }); Diet.addLibraryFood({ name: 'y', category: '其他', per100g: { kcal: 100 } });
   H.eq(Store.data.today.length, 0, 'today 不变');
   H.eq(Store.data.work.plans.length, 0, 'work 不变');
   H.eq(Store.data.fitness.body.length, 0, 'fitness 不变');
@@ -65,8 +65,8 @@ H.test('各模块空状态均有引导文案', function () {
   H.includes(Today.build({ date: REF }), 'empty-state', '今日计划空状态');
   H.includes(Work.build(), 'empty-state', '工作计划空状态');
   const fb = Fitness.build();
-  H.includes(fb, '还没有模板', '健身模板空状态');
-  H.includes(fb, '还没有打卡记录', '健身打卡空状态');
+  H.includes(fb, '训练日程', '健身日程标题');
+  H.includes(fb, '暂无身体数据', '健身身体数据空状态');
   const db = Diet.build({ date: REF });
   H.includes(db, '还没记录', '饮食餐次空状态');
   H.includes(db, '食物库还是空的', '饮食库空状态');
@@ -169,10 +169,9 @@ H.test('首页与各模块摘要数字同源一致', function () {
   pA.items.push({ id: Store.uid(), text: '今日', done: false });
   pA.items.push({ id: Store.uid(), text: '逾期', done: true });
   Store.save();
-  const ft = Fitness.addTemplate('训练');
-  Fitness.addCheckin({ templateId: ft.id, date: REF });
+  const ft = Fitness.setPart(REF, '背');
   Fitness.addBody({ date: '2026-08-16', weight: 72 });
-  Diet.addFood(REF, 'breakfast', { name: 'x', kcal: 250 });
+  Diet.addEntry(REF, 'breakfast', { name: 'x', grams: 100, nutrition: { kcal: 250 } });
   const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
   const ws = Work.summary();
   H.includes(html, '计划 <b>' + ws.plans + '</b>', '工作数字一致');

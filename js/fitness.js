@@ -326,6 +326,7 @@
     // 包一层会随 innerHTML 重建的子容器，事件委托挂在其上，避免监听器在持久 #view 上累积
     viewEl.innerHTML = '<div class="fit-root">' + buildCalendar() + '</div>';
     var root = viewEl.querySelector('.fit-root');
+    if (!root) return; // 无 DOM 环境（如测试基座）下安全跳过绑定
     bindCalendar(root);
     // 初始化 ECharts（仅在有数据时）
     var dom = root.querySelector('#fit-chart');
@@ -400,6 +401,7 @@
     // 包一层会随 innerHTML 重建的子容器，事件委托挂在其上，避免监听器在持久 #view 上累积
     viewEl.innerHTML = '<div class="fit-root">' + buildDetail(dateStr) + '</div>';
     var root = viewEl.querySelector('.fit-root');
+    if (!root) return; // 无 DOM 环境（如测试基座）下安全跳过绑定
     bindDetail(root, dateStr);
   }
 
@@ -453,7 +455,7 @@
     getDay: getDay, setPart: setPart, dayComplete: dayComplete,
     toggleExercise: toggleExercise, removeDay: removeDay, doneCount: doneCount,
     addBody: addBody, findBody: findBody, removeBody: removeBody, trendData: trendData,
-    summary: summary, render: render,
+    summary: summary, build: buildCalendar, render: render,
   };
   W.Fitness = Fitness;
   if (W.Router) W.Router.register('fitness', render, '健身计划');

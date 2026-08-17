@@ -53,12 +53,11 @@ function seedAll() {
   pB.items.push({ id: Store.uid(), text: '任务3', done: true });
   Store.save();
   // fitness
-  const ft = Fitness.addTemplate('晨练');
-  Fitness.addCheckin({ templateId: ft.id, date: REF });
+  Fitness.setPart(REF, '背');
   Fitness.addBody({ date: '2026-08-16', weight: 71 });
   Fitness.addBody({ date: '2026-08-20', weight: 69 });
   // diet
-  Diet.addFood(REF, 'breakfast', { name: 'x', kcal: 300 });
+  Diet.addEntry(REF, 'breakfast', { name: 'x', grams: 100, nutrition: { kcal: 300 } });
   Diet.setTarget(600);
 }
 H.test('首页工作摘要与各模块一致', function () {
@@ -79,10 +78,11 @@ H.test('首页健身摘要与各模块一致', function () {
 H.test('首页饮食摘要与各模块一致', function () {
   seedAll();
   const d = Diet.dailySummary(REF);
-  const t = Store.data.diet.targetKcal;
+  const t = Diet.getActiveGoal(REF).targetKcal;
   const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
   H.includes(html, '热量 ' + Math.round(d.kcal) + ' kcal', '热量应一致');
-  H.includes(html, '/ 目标 ' + t, '目标应一致');
+  H.includes(html, '距目标', '应显示距目标');
+  H.includes(html, '距目标 ' + Math.round(t - d.kcal) + ' kcal', '距目标剩余数应一致');
 });
 H.test('首页含问候、今日项、各模块入口链接', function () {
   seedAll();
