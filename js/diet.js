@@ -191,8 +191,9 @@
       var p = topbar.querySelector('#primary-btn'); if (p) { p.textContent = ''; p.style.display = 'none'; }
     }
     if (!viewEl) return;
-    viewEl.innerHTML = build({ date: date });
-    bind(viewEl, date);
+    // 包一层会随 innerHTML 重建的子容器，事件委托挂在其上，避免监听器在持久 #view 上累积
+    viewEl.innerHTML = '<div class="diet-root">' + build({ date: date }) + '</div>';
+    bind(viewEl.querySelector('.diet-root'), date);
   }
 
   function bind(viewEl, date) {
