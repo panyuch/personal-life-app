@@ -232,7 +232,6 @@
         if (f) { addFood(date, meal, { name: f.name, kcal: f.kcal, protein: f.protein, carb: f.carb, fat: f.fat }); W.Router.reload(); }
       });
     }
-    var foods = viewEl.querySelector('#view') ? viewEl : viewEl;
     viewEl.addEventListener('click', function (e) {
       if (e.target.classList.contains('diet-del-food')) {
         var li = e.target.closest('li'); if (!li) return;
