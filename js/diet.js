@@ -21,6 +21,9 @@
 
   function num(v) { var n = Number(v); return isNaN(n) ? 0 : n; }
 
+  // 当前“查看日期”：跨重渲染保留，使日期切换与任意增删后停留在当前查看日期
+  var state = { date: null };
+
   function addFood(date, meal, food) {
     if (MEALS.indexOf(meal) < 0) return null;
     food = food || {};
@@ -181,7 +184,8 @@
   }
 
   function render(viewEl, topbar) {
-    var date = UI.todayStr();
+    if (state.date == null) state.date = UI.todayStr();
+    var date = state.date;
     if (topbar) {
       var t = topbar.querySelector('#page-title'); if (t) t.textContent = '饮食计划';
       var p = topbar.querySelector('#primary-btn'); if (p) { p.textContent = ''; p.style.display = 'none'; }
@@ -195,9 +199,9 @@
     var prev = viewEl.querySelector('#diet-prev');
     var next = viewEl.querySelector('#diet-next');
     var todayBtn = viewEl.querySelector('#diet-today');
-    if (prev) prev.addEventListener('click', function () { rerender(shiftDate(date, -1)); });
-    if (next) next.addEventListener('click', function () { rerender(shiftDate(date, 1)); });
-    if (todayBtn) todayBtn.addEventListener('click', function () { rerender(UI.todayStr()); });
+    if (prev) prev.addEventListener('click', function () { state.date = shiftDate(state.date, -1); rerender(); });
+    if (next) next.addEventListener('click', function () { state.date = shiftDate(state.date, 1); rerender(); });
+    if (todayBtn) todayBtn.addEventListener('click', function () { state.date = UI.todayStr(); rerender(); });
 
     var setTarget = viewEl.querySelector('#diet-set-target');
     if (setTarget) setTarget.addEventListener('click', function () {
@@ -246,7 +250,12 @@
     });
   }
   function setTarget_func(v) { setTarget(v); }
-  function rerender(d) { if (W.Router) W.Router.reload(); }
+  // 以当前 state（查看日期）重新渲染饮食计划视图，确保日期切换/增删后持续生效
+  function rerender() {
+    var viewEl = W.document && W.document.getElementById ? W.document.getElementById('view') : null;
+    var topbar = W.document && W.document.getElementById ? W.document.getElementById('topbar') : null;
+    render(viewEl, topbar);
+  }
 
   var Diet = {
     MEALS: MEALS,
