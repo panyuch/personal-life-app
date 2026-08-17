@@ -129,7 +129,8 @@
     viewEl.innerHTML = build();
 
     var nick = viewEl.querySelector('#set-nickname');
-    if (nick) nick.addEventListener('input', function () {
+    // 使用 change（失焦/回车后触发一次），避免逐字符输入时反复弹 toast
+    if (nick) nick.addEventListener('change', function () {
       setNickname(nick.value);
       if (UI && UI.toast) UI.toast('昵称已保存', 'success');
     });
