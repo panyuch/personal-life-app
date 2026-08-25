@@ -141,7 +141,8 @@
 
     if (topbar) {
       var t = topbar.querySelector('#page-title'); if (t) t.textContent = '今日计划';
-      var p = topbar.querySelector('#page-date'); if (p) p.textContent = UI.fmtDate(date);
+      // 顶部日期始终表示系统当前日期；日期导航只切换下方计划列表。
+      var p = topbar.querySelector('#page-date'); if (p) p.textContent = UI.fmtDate(UI.todayStr());
       var b = topbar.querySelector('#primary-btn');
       if (b) { b.textContent = '+ 新建'; b.style.display = ''; b.onclick = function () { var inp = viewEl && viewEl.querySelector('#today-input'); if (inp) inp.focus(); }; }
     }

@@ -276,8 +276,7 @@
       var inner = '<div class="cal-daynum">' + i + '</div>';
       var day = getDay(ds);
       if (day && day.part) {
-        var color = PART_COLORS[day.part] || 'var(--theme-color)';
-        inner += '<button class="cal-part" data-nav="' + ds + '" style="color:' + color + '">' + UI.escapeHtml(day.part) + '</button>';
+        inner += '<button class="cal-part" data-nav="' + ds + '">' + UI.escapeHtml(day.part) + '</button>';
       }
       if (dayComplete(ds)) inner += '<span class="cal-check" title="已完成">✓</span>';
       cells += '<div class="' + cls + '" data-date="' + ds + '">' + inner + '</div>';
