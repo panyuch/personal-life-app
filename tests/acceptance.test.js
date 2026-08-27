@@ -192,8 +192,8 @@ H.test('首页与各模块摘要数字同源一致', function () {
   Diet.addEntry(REF, 'breakfast', { name: 'x', grams: 100, nutrition: { kcal: 250 } });
   const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
   const ws = Work.summary();
-  H.includes(html, '计划 <b>' + ws.plans + '</b>', '工作数字一致');
-  H.includes(html, '已完成 <b>' + ws.done + '</b>', '已完成数字一致');
+  H.includes(html, '<div class="stat"><b>' + ws.plans + '</b><span>计划</span></div>', '工作数字一致');
+  H.includes(html, '<div class="stat"><b>' + ws.done + '</b><span>已完成</span></div>', '已完成数字一致');
 });
 
 H.section('端到端流程冒烟');

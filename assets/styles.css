@@ -126,6 +126,21 @@ a.card-link-wrap:hover {
   text-decoration: none;
 }
 
+/* 摘要数字条（工作计划卡：计划数 / 内容数 / 已完成数） */
+.stat-row {
+  display: flex;
+  gap: 18px;
+  margin: 10px 0 2px;
+}
+.stat { text-align: center; }
+.stat b {
+  display: block;
+  font-size: 22px;
+  line-height: 1.2;
+  font-family: var(--font-display, var(--font, inherit));
+}
+.stat span { font-size: 12px; color: var(--text-soft); }
+
 /* 通用控件 */
 input[type="text"], input[type="date"], input[type="number"], textarea, select {
   width: 100%;

@@ -77,7 +77,7 @@
     html += '<div class="grid">';
 
     // 今日计划卡
-    html += '<div class="card"><h3>今日计划</h3>';
+    html += '<div class="card"><h3 data-no="01">今日计划</h3>';
     var inc = todayIncomplete(date, 5);
     if (inc.length === 0) {
       html += '<p class="card-sub">今日计划都完成啦，或还没添加 🎉</p>';
@@ -91,7 +91,7 @@
     html += '<a class="card-link" href="#/today">查看全部 →</a></div>';
 
     // 快速备忘卡
-    html += '<div class="card"><h3>快速备忘</h3>';
+    html += '<div class="card"><h3 data-no="02">快速备忘</h3>';
     html += '<div class="add-row"><input type="text" id="home-memo-input" placeholder="随手记一条…" /><button class="btn btn-primary" id="home-memo-add">记</button></div>';
     if (Store.data.memo.length === 0) {
       html += '<p class="card-sub">还没有备忘</p>';
@@ -104,20 +104,24 @@
     }
     html += '</div>';
 
-    // 工作摘要卡
-    html += '<a class="card card-link-wrap" href="#/work"><h3>工作计划</h3>';
-    html += '<p class="big">计划 <b>' + w.plans + '</b> · 内容 <b>' + w.items + '</b> · 已完成 <b>' + w.done + '</b></p>';
+    // 工作摘要卡（数字条：计划数 / 内容数 / 已完成数）
+    html += '<a class="card card-link-wrap" href="#/work"><h3 data-no="03">工作计划</h3>';
+    html += '<div class="stat-row">';
+    [['计划', w.plans], ['内容', w.items], ['已完成', w.done]].forEach(function (s) {
+      html += '<div class="stat"><b>' + s[1] + '</b><span>' + s[0] + '</span></div>';
+    });
+    html += '</div>';
     html += '<div class="card-sub">点击进入工作计划 →</div></a>';
 
     // 健身摘要卡
-    html += '<a class="card card-link-wrap" href="#/fitness"><h3>健身计划</h3>';
+    html += '<a class="card card-link-wrap" href="#/fitness"><h3 data-no="04">健身计划</h3>';
     var fitText = f.trainedToday ? ('今天已训练：' + UI.escapeHtml(f.trainedToday)) : '今天还没训练';
     html += '<p class="big">' + UI.escapeHtml(fitText) + '</p>';
     var weightText = f.latestWeight ? ('最近体重 ' + f.latestWeight.weight + 'kg (' + UI.escapeHtml(f.latestWeight.date) + ')') : '暂无体重记录';
     html += '<div class="card-sub">' + UI.escapeHtml(weightText) + ' →</div></a>';
 
     // 饮食摘要卡（是否已记录 + 今日热量，无目标对比）
-    html += '<a class="card card-link-wrap" href="#/diet"><h3>饮食计划</h3>';
+    html += '<a class="card card-link-wrap" href="#/diet"><h3 data-no="05">饮食计划</h3>';
     var dietText = dHasFood ? ('今日已记录 · 热量 ' + Math.round(dSum.kcal) + ' kcal') : '今日还没记录';
     html += '<p class="big">' + UI.escapeHtml(dietText) + '</p>';
     html += '<div class="card-sub">点击进入饮食计划 →</div></a>';

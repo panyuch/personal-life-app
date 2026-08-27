@@ -59,13 +59,23 @@ function seedAll() {
   // diet
   Diet.addEntry(REF, 'breakfast', { name: 'x', grams: 100, nutrition: { kcal: 300 } });
 }
-H.test('首页工作摘要与各模块一致', function () {
+H.test('首页工作摘要以数字条呈现且与各模块一致', function () {
   seedAll();
   const s = Work.summary();
   const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
-  H.includes(html, '计划 <b>' + s.plans + '</b>', '计划数应一致');
-  H.includes(html, '内容 <b>' + s.items + '</b>', '内容数应一致');
-  H.includes(html, '已完成 <b>' + s.done + '</b>', '已完成数应一致');
+  H.includes(html, '<div class="stat-row">', '工作计划卡应含数字条');
+  H.includes(html, '<div class="stat"><b>' + s.plans + '</b><span>计划</span></div>', '计划数应一致');
+  H.includes(html, '<div class="stat"><b>' + s.items + '</b><span>内容</span></div>', '内容数应一致');
+  H.includes(html, '<div class="stat"><b>' + s.done + '</b><span>已完成</span></div>', '已完成数应一致');
+});
+H.test('五张摘要卡标题带 data-no 编号 01–05', function () {
+  seedAll();
+  const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
+  H.includes(html, '<h3 data-no="01">今日计划</h3>', '今日计划卡编号 01');
+  H.includes(html, '<h3 data-no="02">快速备忘</h3>', '快速备忘卡编号 02');
+  H.includes(html, '<h3 data-no="03">工作计划</h3>', '工作计划卡编号 03');
+  H.includes(html, '<h3 data-no="04">健身计划</h3>', '健身计划卡编号 04');
+  H.includes(html, '<h3 data-no="05">饮食计划</h3>', '饮食计划卡编号 05');
 });
 H.test('首页健身摘要与各模块一致', function () {
   seedAll();
