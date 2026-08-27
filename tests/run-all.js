@@ -16,6 +16,7 @@ const files = [
   'diet-modules.test.js',
   'phase6.test.js',
   'chart-seam.test.js',
+  'theming.test.js',
   'acceptance.test.js',
 ];
 

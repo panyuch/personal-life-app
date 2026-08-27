@@ -126,7 +126,7 @@ H.test('导出可下载 .json（文件名格式）', function () {
 H.test('导入可恢复全部数据', function () {
   reset();
   const payload = JSON.stringify({
-    version: 1, settings: { nickname: '恢复', themeColor: '#abcabc', darkMode: false },
+    version: 1, settings: { nickname: '恢复', theme: 'gradient', darkMode: false },
     today: [{ id: 'a', date: REF, text: 't', done: false, createdAt: '' }],
     work: { plans: [{ id: 'p', name: 'P', items: [] }] },
     fitness: { templates: [], checkins: [], body: [{ id: 'b', date: REF, weight: 70, bodyFat: null, note: '' }] },
@@ -134,6 +134,7 @@ H.test('导入可恢复全部数据', function () {
   });
   Store.import(payload);
   H.eq(Store.data.settings.nickname, '恢复', '昵称恢复');
+  H.eq(Store.data.settings.theme, 'gradient', '界面风格恢复');
   H.eq(Store.data.today.length, 1, '今日计划恢复');
   H.eq(Store.data.fitness.body.length, 1, '身体数据恢复');
 });
@@ -146,12 +147,12 @@ H.test('导入与清空均有二次确认', function () {
     .then(function () { H.ok(importConfirmed, '导入应触发二次确认'); return Settings.requestClear(); })
     .then(function () { H.ok(clearConfirmed, '清空应触发二次确认'); });
 });
-H.test('切换主题色即时变化且刷新保留', function () {
+H.test('切换界面风格即时变化且刷新保留', function () {
   reset();
-  Settings.setThemeColor('#ff8800');
-  H.eq(win.document._themeColor, '#ff8800', '界面主题色即时变化');
+  Settings.setTheme('gradient');
+  H.eq(win.document._skin, 'gradient', '界面风格即时变化');
   const re = JSON.parse(storage.getItem('lifeApp:data:v1'));
-  H.eq(re.settings.themeColor, '#ff8800', '刷新后仍保留');
+  H.eq(re.settings.theme, 'gradient', '刷新后仍保留');
 });
 H.test('新增/修改后刷新数据仍在（持久化）', function () {
   reset();

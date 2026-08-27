@@ -22,11 +22,21 @@ H.test('setNickname 保存并持久化', function () {
   const re = JSON.parse(storage.getItem('lifeApp:data:v1'));
   H.eq(re.settings.nickname, '小陈', '应写入 localStorage');
 });
-H.test('setThemeColor 保存并立即改变主题变量', function () {
+H.test('setTheme 保存并立即应用皮肤（写 data-skin）', function () {
   reset();
-  Settings.setThemeColor('#ff3366');
-  H.eq(Store.data.settings.themeColor, '#ff3366', '应保存主题色');
-  H.eq(win.document._themeColor, '#ff3366', 'applyTheme 应写入 CSS 变量');
+  Settings.setTheme('editorial');
+  H.eq(Store.data.settings.theme, 'editorial', '应保存风格键');
+  H.eq(win.document._skin, 'editorial', 'applyTheme 应写 data-skin');
+  const re = JSON.parse(storage.getItem('lifeApp:data:v1'));
+  H.eq(re.settings.theme, 'editorial', '应写入 localStorage');
+});
+H.test('setTheme 白名单校验：非法键被忽略', function () {
+  reset();
+  Store.data.settings.theme = 'brutal';
+  UI.applyTheme(); // 建立初始 body 状态
+  Settings.setTheme('not-a-skin');
+  H.eq(Store.data.settings.theme, 'brutal', '非法风格键应保持不变');
+  H.eq(win.document._skin, 'brutal', '非法键不应改变 data-skin');
 });
 H.test('setDarkMode 切换深色并写 data-theme', function () {
   reset();
@@ -52,7 +62,7 @@ H.test('requestImport：确认后导入合法数据', async function () {
   confirmAnswer = true;
   const payload = JSON.stringify({
     version: 1,
-    settings: { nickname: '导入的用户', themeColor: '#123456', darkMode: false },
+    settings: { nickname: '导入的用户', theme: 'editorial', darkMode: false },
     today: [], work: { projects: [], tasks: [] },
     fitness: { templates: [], checkins: [], body: [] },
     diet: { targetKcal: 1800, foods: [], days: {} }, memo: [],
@@ -60,6 +70,7 @@ H.test('requestImport：确认后导入合法数据', async function () {
   let done = await Settings.requestImport(payload);
   H.eq(done, true, '应返回 true');
   H.eq(Store.data.settings.nickname, '导入的用户', '数据应被替换');
+  H.eq(Store.data.settings.theme, 'editorial', '界面风格应被导入');
 });
 H.test('requestImport：确认后导入非法 JSON 应拒绝且数据不变', async function () {
   reset();
@@ -76,7 +87,7 @@ H.test('requestImport：用户取消（二次确认 false）不导入', async fu
   confirmAnswer = false;
   const before = Store.data.today.length;
   let done = await Settings.requestImport(JSON.stringify({
-    version: 1, settings: { nickname: 'x', themeColor: '#000', darkMode: false },
+    version: 1, settings: { nickname: 'x', theme: 'brutal', darkMode: false },
     today: [{ id: 'a', date: '2026-08-17', text: 'a', done: false, createdAt: '' }],
     work: { projects: [], tasks: [] }, fitness: { templates: [], checkins: [], body: [] },
     diet: { targetKcal: null, foods: [], days: {} }, memo: [],
@@ -104,12 +115,18 @@ H.test('requestClear：取消（危险二次确认 false）不清空', async fun
 });
 
 H.section('设置页渲染');
-H.test('build 含昵称值、主题色控件、备份按钮与关于', function () {
+H.test('build 含昵称值、界面风格选择器、备份按钮与关于', function () {
   reset();
   Store.data.settings.nickname = '阿明';
+  Store.data.settings.theme = 'brutal';
   const html = Settings.build();
   H.includes(html, 'value="阿明"', '应回显昵称');
-  H.includes(html, 'id="set-color"', '应包含主题色控件');
+  H.includes(html, 'id="skin-grid"', '应包含界面风格选择器');
+  H.includes(html, 'data-skin="brutal"', '应包含野兽派卡片');
+  H.includes(html, 'skin-card active" data-skin="brutal"', '当前风格应高亮');
+  H.notIncludes(html, 'set-color', '不应再包含主题色取色器');
+  H.notIncludes(html, 'swatch', '不应再包含主题色色块');
+  H.includes(html, 'id="set-dark"', '深色开关应保留');
   H.includes(html, 'id="set-export"', '应包含导出按钮');
   H.includes(html, 'id="set-import"', '应包含导入按钮');
   H.includes(html, 'id="set-clear"', '应包含清空按钮');

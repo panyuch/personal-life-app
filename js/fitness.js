@@ -18,7 +18,22 @@
 
   // 训练部位（下拉框五项）
   var PARTS = ['胸', '肩', '背', '腿', '有氧'];
+  // 部位色兜底表（皮肤加载后由 CSS 变量 --part-* 覆盖，见 assets/themes.css）
   var PART_COLORS = { '胸': '#ef4444', '肩': '#f59e0b', '背': '#10b981', '腿': '#3b82f6', '有氧': '#8b5cf6' };
+  var PART_VARS = { '胸': '--part-chest', '肩': '--part-shoulder', '背': '--part-back', '腿': '--part-leg', '有氧': '--part-cardio' };
+
+  // 部位色随当前皮肤主题化：优先读 CSS 变量（每套皮肤各一套），读不到回落兜底表
+  function getPartColor(part) {
+    var v = PART_VARS[part];
+    if (v) {
+      try {
+        // 皮肤变量定义在 <body data-skin> 上，CSS 变量只向下继承，必须读 body 而非 html
+        var val = W.getComputedStyle(W.document.body).getPropertyValue(v);
+        if (val && val.trim()) return val.trim();
+      } catch (e) { /* Node 测试环境无 getComputedStyle，走兜底 */ }
+    }
+    return PART_COLORS[part] || 'var(--accent)';
+  }
 
   // 各部位默认 5 个训练动作（安排部位时自动初始化）
   var DEFAULT_EXERCISES = {
@@ -227,7 +242,7 @@
       var inner = '<div class="cal-daynum">' + i + '</div>';
       var day = getDay(ds);
       if (day && day.part) {
-        inner += '<button class="cal-part" data-nav="' + ds + '">' + UI.escapeHtml(day.part) + '</button>';
+        inner += '<button class="cal-part" data-nav="' + ds + '" style="color:' + getPartColor(day.part) + '">' + UI.escapeHtml(day.part) + '</button>';
       }
       if (dayComplete(ds)) inner += '<span class="cal-check" title="已完成">✓</span>';
       cells += '<div class="' + cls + '" data-date="' + ds + '">' + inner + '</div>';
@@ -321,7 +336,7 @@
     html += '<a class="card-link" href="#/fitness" id="fit-back">← 返回日程</a>';
     html += '<div class="card detail-card">';
     html += '<div class="detail-head"><h3>' + UI.escapeHtml(fmtDateWeek(dateStr)) + '</h3>';
-    if (day && day.part) html += '<span class="detail-part" style="color:' + (PART_COLORS[day.part] || 'var(--theme-color)') + '">' + UI.escapeHtml(day.part) + '训练</span>';
+    if (day && day.part) html += '<span class="detail-part" style="color:' + getPartColor(day.part) + '">' + UI.escapeHtml(day.part) + '训练</span>';
     html += '</div>';
 
     if (!day || !day.part) {
@@ -397,6 +412,7 @@
     getDay: getDay, setPart: setPart, dayComplete: dayComplete,
     toggleExercise: toggleExercise, removeDay: removeDay, doneCount: doneCount,
     addBody: addBody, findBody: findBody, removeBody: removeBody, trendData: trendData,
+    getPartColor: getPartColor,
     summary: summary, build: buildCalendar, render: render,
   };
   W.Fitness = Fitness;

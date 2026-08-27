@@ -68,11 +68,12 @@ const win = {
   document: {
     _themeColor: '',
     _themeDark: false,
-    documentElement: { style: { setProperty(k, v) { if (k === '--theme-color') win.document._themeColor = v; }, getPropertyValue() { return ''; } } },
+    _skin: '',
+    documentElement: { style: { setProperty() {}, getPropertyValue() { return ''; } } },
     body: {
       _attrs: {},
-      setAttribute(k, v) { this._attrs[k] = v; if (k === 'data-theme') win.document._themeDark = (v === 'dark'); },
-      removeAttribute(k) { delete this._attrs[k]; if (k === 'data-theme') win.document._themeDark = false; },
+      setAttribute(k, v) { this._attrs[k] = v; if (k === 'data-theme') win.document._themeDark = (v === 'dark'); if (k === 'data-skin') win.document._skin = v; },
+      removeAttribute(k) { delete this._attrs[k]; if (k === 'data-theme') win.document._themeDark = false; if (k === 'data-skin') win.document._skin = ''; },
       getAttribute(k) { return k in this._attrs ? this._attrs[k] : null; },
     },
     getElementById(id) { return elementCache[id] || (elementCache[id] = mockEl(id)); },

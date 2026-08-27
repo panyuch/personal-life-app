@@ -14,13 +14,18 @@
 
   function getThemeColor() {
     try {
-      var v = W.getComputedStyle(W.document.documentElement).getPropertyValue('--theme-color');
+      // 主色随当前皮肤 accent 变化（theming：--accent 取代旧 --theme-color）
+      // 注意：皮肤变量定义在 <body data-skin> 上，CSS 变量只向下继承，必须读 body 而非 html
+      var v = W.getComputedStyle(W.document.body).getPropertyValue('--accent');
       return (v && v.trim()) || '#3b82f6';
     } catch (e) { return '#3b82f6'; }
   }
   function isDark() {
+    // 明暗判断 = 深色开启 或 皮肤本身为暗色（cyber 恒暗）
     try {
-      return !!(W.document.body && W.document.body.getAttribute('data-theme') === 'dark');
+      var body = W.document.body;
+      if (!body) return false;
+      return body.getAttribute('data-theme') === 'dark' || body.getAttribute('data-skin') === 'cyber';
     } catch (e) { return false; }
   }
   function hexToRgba(hex, a) {

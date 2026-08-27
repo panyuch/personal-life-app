@@ -177,7 +177,7 @@ H.test('导入旧 v2 备份丢弃目标/禁忌/食谱，保留日记录与食材
   reset();
   var legacy = {
     version: 1,
-    settings: { nickname: '', themeColor: '#3b82f6', darkMode: false },
+    settings: { nickname: '', theme: 'brutal', darkMode: false },
     today: [], work: { plans: [] }, fitness: { templates: [], checkins: [], body: [], schedule: {} },
     diet: {
       version: 2,

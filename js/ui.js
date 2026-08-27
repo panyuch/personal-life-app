@@ -98,17 +98,18 @@
     return html;
   }
 
-  // 把设置写入 CSS 变量 / body[data-theme]
+  // 把设置映射到 <body> 属性：data-skin（风格键）+ data-theme="dark"（深色）。
+  // 这是唯一的「设置 → 渲染」转换点：皮肤样式据这两个属性命中；不再写主题色变量。
   function applyTheme() {
     var d = W.document;
     if (!d) return;
     var s = (W.Store && W.Store.data) ? W.Store.data.settings : null;
-    var color = (s && s.themeColor) || '#3b82f6';
+    var theme = (s && s.theme) || (W.Store && W.Store.DEFAULT_THEME) || 'brutal';
+    // 白名单校验：非法值回落默认风格，避免写出无效 data-skin
+    if (W.Store && W.Store.THEMES && W.Store.THEMES.indexOf(theme) === -1) theme = (W.Store && W.Store.DEFAULT_THEME) || 'brutal';
     var dark = s ? !!s.darkMode : false;
-    if (d.documentElement && d.documentElement.style && d.documentElement.style.setProperty) {
-      d.documentElement.style.setProperty('--theme-color', color);
-    }
     if (d.body) {
+      d.body.setAttribute('data-skin', theme);
       if (dark) d.body.setAttribute('data-theme', 'dark');
       else d.body.removeAttribute('data-theme');
     }

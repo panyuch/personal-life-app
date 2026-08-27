@@ -25,10 +25,19 @@
     };
   }
 
+  // 界面风格白名单（theming spec：brutal | editorial | neumorph | gradient | cyber）
+  var THEMES = ['brutal', 'editorial', 'neumorph', 'gradient', 'cyber'];
+  var DEFAULT_THEME = 'brutal';
+
+  // 白名单校验：非法值回落默认风格（brutal）
+  function normalizeTheme(v) {
+    return (THEMES.indexOf(v) >= 0) ? v : DEFAULT_THEME;
+  }
+
   function defaultData() {
     return {
       version: 1,
-      settings: { nickname: '', themeColor: '#3b82f6', darkMode: false },
+      settings: { nickname: '', theme: DEFAULT_THEME, darkMode: false },
       today: [], // { id, date:'YYYY-MM-DD', text, done, createdAt }
       // 工作计划：卡片式。每张计划卡 = { id, name, items:[{id,text,done}] }
       work: { plans: [] },
@@ -115,7 +124,8 @@
     if (d.settings && typeof d.settings === 'object') {
       out.settings = {
         nickname: d.settings.nickname != null ? String(d.settings.nickname) : '',
-        themeColor: d.settings.themeColor || '#3b82f6',
+        // 旧字段 themeColor 在此被丢弃；theme 缺失或非法时回落 brutal
+        theme: normalizeTheme(d.settings.theme),
         darkMode: !!d.settings.darkMode,
       };
     }
@@ -217,6 +227,8 @@
 
   var Store = {
     STORAGE_KEY: STORAGE_KEY,
+    THEMES: THEMES,
+    DEFAULT_THEME: DEFAULT_THEME,
     load: load,
     save: save,
     export: exportData,

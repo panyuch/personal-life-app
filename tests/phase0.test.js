@@ -46,6 +46,7 @@ H.test('import() 合法数据整体替换', function () {
   reset();
   const payload = {
     version: 1,
+    // 旧结构含 themeColor：迁移时应被丢弃、theme 回落 brutal（见 theming 迁移用例）
     settings: { nickname: '小陈', themeColor: '#ff0000', darkMode: true },
     today: [{ id: 't1', date: '2026-08-17', text: 'a', done: false, createdAt: '' }],
     work: { projects: [{ id: 'p1', name: '项目A', note: '' }], tasks: [] },
@@ -55,6 +56,9 @@ H.test('import() 合法数据整体替换', function () {
   };
   Store.import(JSON.stringify(payload));
   H.eq(Store.data.settings.nickname, '小陈', '昵称应被导入');
+  H.eq(Store.data.settings.theme, 'brutal', '旧数据无 theme，应回落默认 brutal');
+  H.eq(Store.data.settings.darkMode, true, 'darkMode 应保留');
+  H.ok(!('themeColor' in Store.data.settings), 'themeColor 应被丢弃');
   H.eq(Store.data.today.length, 1, '今日计划应被导入');
   // 导入应落盘
   const re = JSON.parse(storage.getItem('lifeApp:data:v1'));
@@ -97,7 +101,7 @@ H.test('normalize：旧数据缺字段时补齐默认结构（经 load 路径）
   Store.load();
   H.ok(Array.isArray(Store.data.work.plans), '缺失 work 应补为默认');
   H.ok(Array.isArray(Store.data.fitness.body), '缺失 fitness 应补为默认');
-  H.eq(Store.data.settings.themeColor, '#3b82f6', '缺失 themeColor 应补默认');
+  H.eq(Store.data.settings.theme, 'brutal', '缺失 theme 应回落默认 brutal');
   H.eq(Store.data.settings.nickname, '老用户', '已有昵称应保留');
 });
 
@@ -143,16 +147,17 @@ H.test('escapeHtml 转义危险字符', function () {
   H.notIncludes(out, '<b>', '尖括号应被转义');
   H.includes(out, '&lt;', '应包含 &lt;');
 });
-H.test('applyTheme 写入主题变量与深色', function () {
+H.test('applyTheme 写 data-skin 与 data-theme（深色开关）', function () {
   reset();
-  Store.data.settings.themeColor = '#ff3366';
+  Store.data.settings.theme = 'gradient';
   Store.data.settings.darkMode = true;
   UI.applyTheme();
-  H.eq(win.document._themeColor, '#ff3366', '应写入 --theme-color');
+  H.eq(win.document._skin, 'gradient', '应写 data-skin=gradient');
   H.eq(win.document._themeDark, true, '应开启深色');
   Store.data.settings.darkMode = false;
   UI.applyTheme();
   H.eq(win.document._themeDark, false, '应关闭深色');
+  H.eq(win.document._skin, 'gradient', '切换深色不应改变风格');
 });
 
 H.section('路由 Router');

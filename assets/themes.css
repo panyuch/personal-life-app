@@ -1,0 +1,361 @@
+/* =========================================================================
+   themes.css — 5 套界面皮肤（theming spec）
+   -------------------------------------------------------------------------
+   选择器约定：
+   - 亮色：body[data-skin="X"]（X ∈ brutal / editorial / neumorph / gradient / cyber）
+   - 暗色：body[data-skin="X"][data-theme="dark"]（cyber 恒暗、无额外暗色档）
+   深色为全局布尔：切换风格不重置明/暗；开启深色后当前风格显示其专属暗色版。
+
+   变量：
+   - 颜色：--accent（主色，取代旧 --theme-color）/ --on-accent / --accent-2 / --bg / --surface /
+     --text / --text-soft / --border / --bar-bg / --chart-fill / --nav-active-bg / --nav-active-fg
+   - 形状：--bw（边框宽）/ --radius / --radius-sm / --shadow / --shadow-inset
+   - 字体：--font / --font-display
+   - 语义色（训练部位，T06）：--part-chest / --part-shoulder / --part-back / --part-leg / --part-cardio
+   ========================================================================= */
+
+/* ---------- 0. 通用（所有皮肤） ---------- */
+body { transition: background 0.35s ease, color 0.35s ease; }
+
+/* =========================================================================
+   1. 野兽派（Brutalism）：cream 底 + 粗黑边 + 橙 accent + 硬阴影 + 零圆角 + 等宽字体
+   暗色版：沥青黑 + 荧光橙
+   ========================================================================= */
+body[data-skin="brutal"] {
+  --bg: #efece3; --surface: #ffffff; --text: #111111; --text-soft: #57534e;
+  --border: #111111; --accent: #ff4d00; --on-accent: #ffffff;
+  --accent-2: #f7e600; --bw: 3px; --radius: 0px; --radius-sm: 0px;
+  --shadow: 7px 7px 0 #111; --bar-bg: #e7e5de; --chart-fill: rgba(255,77,0,.12);
+  --font: ui-monospace, "SFMono-Regular", "Cascadia Mono", Consolas, "Microsoft YaHei", monospace;
+  --nav-active-bg: #ff4d00; --nav-active-fg: #ffffff;
+  --part-chest: #ff2d00; --part-shoulder: #ffb300; --part-back: #00b377;
+  --part-leg: #0055ff; --part-cardio: #ff00d4;
+}
+body[data-skin="brutal"] .brand { background: var(--accent-2); color: #111; display: inline-block; padding: 6px 12px; }
+body[data-skin="brutal"] #sidebar { border-right: var(--bw) solid var(--border); }
+body[data-skin="brutal"] #topbar { border-bottom: var(--bw) solid var(--border); }
+body[data-skin="brutal"] #sidebar nav a.active { box-shadow: 4px 4px 0 #111; }
+body[data-skin="brutal"] .card,
+body[data-skin="brutal"] .work-card,
+body[data-skin="brutal"] .cal-card,
+body[data-skin="brutal"] .detail-card { box-shadow: 7px 7px 0 #111; }
+body[data-skin="brutal"] .card:hover,
+body[data-skin="brutal"] .work-card:hover,
+body[data-skin="brutal"] .cal-card:hover { transform: translate(-2px, -2px); box-shadow: 9px 9px 0 #111; transition: 0.12s; }
+body[data-skin="brutal"] #primary-btn,
+body[data-skin="brutal"] .btn-primary { box-shadow: 4px 4px 0 #111; }
+body[data-skin="brutal"] #primary-btn:hover,
+body[data-skin="brutal"] .btn-primary:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #111; }
+body[data-skin="brutal"] .bar,
+body[data-skin="brutal"] .macro-row .mbar { border-radius: 0; height: 14px; border: 2px solid #111; background: #fff; }
+body[data-skin="brutal"] .bar > i { background: var(--accent); border-radius: 0; }
+body[data-skin="brutal"] .segmented { border-radius: 0; border-width: 2px; }
+body[data-skin="brutal"] .segmented button { border-radius: 0; }
+body[data-skin="brutal"] .cal-cell { border-radius: 0; }
+body[data-skin="brutal"] input[type="text"], body[data-skin="brutal"] input[type="number"],
+body[data-skin="brutal"] input[type="date"], body[data-skin="brutal"] select, body[data-skin="brutal"] textarea {
+  border-radius: 0; border-width: 2px;
+}
+body[data-skin="brutal"] .btn { border-radius: 0; }
+body[data-skin="brutal"] .card h3 { text-transform: uppercase; letter-spacing: 1px; }
+
+/* 野兽派暗色版：沥青黑 + 荧光橙 */
+body[data-skin="brutal"][data-theme="dark"] {
+  --bg: #151515; --surface: #1e1e1e; --text: #f4f4f4; --text-soft: #a3a3a3;
+  --border: #ff6a1a; --accent: #ff6a1a; --on-accent: #111;
+  --accent-2: #f7e600; --bar-bg: #2a2a2a; --chart-fill: rgba(255,106,26,.16);
+  --shadow: 7px 7px 0 #ff6a1a; --nav-active-bg: #ff6a1a; --nav-active-fg: #111;
+  --part-chest: #ff5c3c; --part-shoulder: #ffc94d; --part-back: #2ee6a3;
+  --part-leg: #4d8aff; --part-cardio: #ff5ce8;
+}
+body[data-skin="brutal"][data-theme="dark"] .brand { color: #111; }
+body[data-skin="brutal"][data-theme="dark"] .card:hover,
+body[data-skin="brutal"][data-theme="dark"] .work-card:hover,
+body[data-skin="brutal"][data-theme="dark"] .cal-card:hover { transform: none; }
+body[data-skin="brutal"][data-theme="dark"] .card,
+body[data-skin="brutal"][data-theme="dark"] .work-card,
+body[data-skin="brutal"][data-theme="dark"] .cal-card,
+body[data-skin="brutal"][data-theme="dark"] .detail-card { box-shadow: 6px 6px 0 #ff6a1a; }
+
+/* =========================================================================
+   2. 编辑杂志风（Editorial）：衬线大标题 + 强留白 + 朱红 accent + 细线编号
+   暗色版：墨夜版（墨黑底 + 米白衬线 + 朱红提亮 + 暗金/米白细线）
+   ========================================================================= */
+body[data-skin="editorial"] {
+  --bg: #faf8f4; --surface: #ffffff; --text: #171512; --text-soft: #8a857a;
+  --border: #171512; --accent: #a31f1f; --on-accent: #fff;
+  --bw: 1px; --radius: 0px; --radius-sm: 0px;
+  --shadow: none; --bar-bg: #ebe7df; --chart-fill: transparent;
+  --font: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-display: "Songti SC", "STSong", Georgia, "Times New Roman", serif;
+  --nav-active-bg: #171512; --nav-active-fg: #fff;
+  --part-chest: #a31f1f; --part-shoulder: #c78a2a; --part-back: #2f6b4f;
+  --part-leg: #274b8f; --part-cardio: #8a3d7a;
+}
+body[data-skin="editorial"] #sidebar { border-right: 1px solid #d9d4c8; background: #fffdf9; }
+body[data-skin="editorial"] #topbar { border-bottom: 1px solid #171512; background: transparent; }
+body[data-skin="editorial"] #page-title { font-size: 24px; letter-spacing: 2px; font-family: var(--font-display); }
+body[data-skin="editorial"] #page-date { text-transform: uppercase; letter-spacing: 1px; }
+body[data-skin="editorial"] #primary-btn { background: #171512; color: #fff; border-radius: 0; letter-spacing: 2px; padding: 9px 22px; }
+body[data-skin="editorial"] .btn-primary { background: #171512; color: #fff; border-color: #171512; }
+body[data-skin="editorial"] .card.greet h2 { font-family: var(--font-display); font-size: 34px; font-weight: 600; letter-spacing: -1px; line-height: 1.15; margin: 0 0 4px; }
+body[data-skin="editorial"] .card,
+body[data-skin="editorial"] .work-card,
+body[data-skin="editorial"] .cal-card,
+body[data-skin="editorial"] .detail-card { border: none; border-top: 2px solid #171512; padding: 18px 0; box-shadow: none; background: transparent; }
+body[data-skin="editorial"] .card h3,
+body[data-skin="editorial"] .work-card-title,
+body[data-skin="editorial"] .cal-title { text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; font-family: var(--font); color: #171512; }
+body[data-skin="editorial"] .card h3::before { content: attr(data-no); font-family: var(--font-display); font-style: italic; color: var(--accent); font-size: 15px; margin-right: 8px; }
+body[data-skin="editorial"] .big { font-family: var(--font-display); font-size: 22px; font-weight: 500; }
+body[data-skin="editorial"] .bar { height: 2px; border-radius: 0; background: #e3ded2; }
+body[data-skin="editorial"] .bar > i { border-radius: 0; background: #171512; }
+body[data-skin="editorial"] .cal-cell { border: none; border-bottom: 1px solid #e3ded2; border-radius: 0; }
+body[data-skin="editorial"] .cal-part { font-family: var(--font-display); font-style: italic; color: var(--accent); }
+body[data-skin="editorial"] .cal-weekdays { border-top: 1px solid #171512; border-bottom: 1px solid #171512; }
+body[data-skin="editorial"] .segmented { border-radius: 0; }
+body[data-skin="editorial"] .segmented button { border-radius: 0; letter-spacing: 1px; }
+body[data-skin="editorial"] .btn { border-radius: 0; }
+body[data-skin="editorial"] input[type="text"], body[data-skin="editorial"] input[type="number"],
+body[data-skin="editorial"] input[type="date"], body[data-skin="editorial"] select, body[data-skin="editorial"] textarea {
+  border-radius: 0; border-top: none; border-left: none; border-right: none; background: transparent; padding-left: 2px;
+}
+
+/* 编辑杂志风暗色版：墨夜版 */
+body[data-skin="editorial"][data-theme="dark"] {
+  --bg: #141210; --surface: #1c1917; --text: #f0ead9; --text-soft: #a89f8d;
+  --border: #d9c9a3; --accent: #c8452f; --on-accent: #fff;
+  --bar-bg: #2a251f; --chart-fill: rgba(200,69,47,.12);
+  --nav-active-bg: #f0ead9; --nav-active-fg: #141210;
+  --part-chest: #d84a4a; --part-shoulder: #d9a14a; --part-back: #5aa37f;
+  --part-leg: #5d84c4; --part-cardio: #b273a3;
+}
+body[data-skin="editorial"][data-theme="dark"] #sidebar { background: #161311; border-right-color: #3a322a; }
+body[data-skin="editorial"][data-theme="dark"] #topbar { border-bottom-color: #d9c9a3; background: transparent; }
+body[data-skin="editorial"][data-theme="dark"] .card,
+body[data-skin="editorial"][data-theme="dark"] .work-card,
+body[data-skin="editorial"][data-theme="dark"] .cal-card,
+body[data-skin="editorial"][data-theme="dark"] .detail-card { border-top-color: #d9c9a3; background: transparent; }
+body[data-skin="editorial"][data-theme="dark"] .card h3,
+body[data-skin="editorial"][data-theme="dark"] .work-card-title,
+body[data-skin="editorial"][data-theme="dark"] .cal-title { color: #f0ead9; }
+body[data-skin="editorial"][data-theme="dark"] .bar { background: #2a251f; }
+body[data-skin="editorial"][data-theme="dark"] .cal-cell { border-bottom-color: #3a322a; }
+body[data-skin="editorial"][data-theme="dark"] .cal-weekdays { border-top-color: #d9c9a3; border-bottom-color: #d9c9a3; }
+
+/* =========================================================================
+   3. 新拟物派（Neumorphism）：浅灰同色浮雕 + 双阴影 + 紫 accent
+   暗色版：暗灰浮雕（深黑 + 亮灰双阴影 + 紫提亮）
+   ========================================================================= */
+body[data-skin="neumorph"] {
+  --bg: #e4e9f1; --surface: #e4e9f1; --text: #475569; --text-soft: #8a94a6;
+  --border: transparent; --accent: #6c63ff; --on-accent: #fff;
+  --bw: 0px; --radius: 18px; --radius-sm: 12px;
+  --shadow: 8px 8px 18px #c3cad6, -8px -8px 18px #ffffff;
+  --shadow-inset: inset 5px 5px 10px #c3cad6, inset -5px -5px 10px #ffffff;
+  --bar-bg: #c3cad6; --chart-fill: rgba(108,99,255,.15);
+  --font: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --nav-active-bg: #e4e9f1; --nav-active-fg: var(--accent);
+  --part-chest: #e0506b; --part-shoulder: #e0a33f; --part-back: #43b581;
+  --part-leg: #4a6fd6; --part-cardio: #9b5fd0;
+}
+body[data-skin="neumorph"] #sidebar { background: #e4e9f1; border-right: none; }
+body[data-skin="neumorph"] #topbar { background: #e4e9f1; border-bottom: none; }
+body[data-skin="neumorph"] #sidebar nav a.active { box-shadow: var(--shadow-inset); }
+body[data-skin="neumorph"] .brand { color: var(--text); }
+body[data-skin="neumorph"] .card,
+body[data-skin="neumorph"] .work-card,
+body[data-skin="neumorph"] .cal-card,
+body[data-skin="neumorph"] .detail-card { border: none; box-shadow: var(--shadow); }
+body[data-skin="neumorph"] #primary-btn,
+body[data-skin="neumorph"] .btn-primary { box-shadow: var(--shadow); background: var(--accent); border: none; }
+body[data-skin="neumorph"] #primary-btn:active,
+body[data-skin="neumorph"] .btn-primary:active { box-shadow: var(--shadow-inset); }
+body[data-skin="neumorph"] .btn { border: none; box-shadow: var(--shadow); }
+body[data-skin="neumorph"] ul.list li { border-bottom-color: #d4dae4; }
+body[data-skin="neumorph"] .bar { box-shadow: var(--shadow-inset); background: #e4e9f1; height: 12px; }
+body[data-skin="neumorph"] .bar > i { background: linear-gradient(90deg, #6c63ff, #9d5cff); box-shadow: 0 0 8px rgba(108,99,255,.5); }
+body[data-skin="neumorph"] .segmented { border: none; box-shadow: var(--shadow-inset); }
+body[data-skin="neumorph"] .segmented button { background: transparent; }
+body[data-skin="neumorph"] .segmented button.active { background: var(--accent); box-shadow: var(--shadow); }
+body[data-skin="neumorph"] .cal-cell { border: none; box-shadow: var(--shadow); }
+body[data-skin="neumorph"] .cal-cell.today { box-shadow: var(--shadow-inset); }
+body[data-skin="neumorph"] .cal-cell.today .cal-daynum { color: var(--accent); }
+body[data-skin="neumorph"] input[type="text"], body[data-skin="neumorph"] input[type="number"],
+body[data-skin="neumorph"] input[type="date"], body[data-skin="neumorph"] select, body[data-skin="neumorph"] textarea {
+  border: none; box-shadow: var(--shadow-inset); background: #e4e9f1;
+}
+body[data-skin="neumorph"] .btn-danger { background: #ffe1e1; color: #c0392b; }
+
+/* 新拟物派暗色版：暗灰浮雕 */
+body[data-skin="neumorph"][data-theme="dark"] {
+  --bg: #191a1f; --surface: #191a1f; --text: #c9cede; --text-soft: #8a92a8;
+  --border: transparent; --accent: #8d7bff; --on-accent: #16161c;
+  --shadow: 8px 8px 18px #101116, -8px -8px 18px #23242c;
+  --shadow-inset: inset 5px 5px 10px #101116, inset -5px -5px 10px #23242c;
+  --bar-bg: #262731; --chart-fill: rgba(141,123,255,.16);
+  --nav-active-bg: #191a1f; --nav-active-fg: var(--accent);
+  --part-chest: #ff7d93; --part-shoulder: #ffc46a; --part-back: #6fd6a8;
+  --part-leg: #7a9bf0; --part-cardio: #bd8ae8;
+}
+body[data-skin="neumorph"][data-theme="dark"] #sidebar,
+body[data-skin="neumorph"][data-theme="dark"] #topbar { background: #191a1f; }
+body[data-skin="neumorph"][data-theme="dark"] .bar { background: #191a1f; }
+body[data-skin="neumorph"][data-theme="dark"] input[type="text"], body[data-skin="neumorph"][data-theme="dark"] input[type="number"],
+body[data-skin="neumorph"][data-theme="dark"] input[type="date"], body[data-skin="neumorph"][data-theme="dark"] select, body[data-skin="neumorph"][data-theme="dark"] textarea {
+  background: #191a1f; box-shadow: var(--shadow-inset);
+}
+
+/* =========================================================================
+   4. 现代渐变风（Gradient）：彩色径向渐变背景 + 毛玻璃 + 紫粉青渐变 accent
+   暗色版：暗夜霓虹渐变（深蓝紫光斑 + 半透明深玻璃 + 提亮渐变）
+   ========================================================================= */
+body[data-skin="gradient"] {
+  --bg: #eef1fb; --surface: rgba(255,255,255,.66); --text: #23253a; --text-soft: #6a6f8f;
+  --border: rgba(255,255,255,.7); --accent: #6d5df6; --on-accent: #fff;
+  --bw: 1px; --radius: 22px; --radius-sm: 14px;
+  --shadow: 0 10px 30px rgba(90,90,180,.12);
+  --bar-bg: rgba(255,255,255,.7); --chart-fill: rgba(109,93,246,.16);
+  --font: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --nav-active-bg: linear-gradient(135deg, #6d5df6, #c86dd7);
+  --nav-active-fg: #fff;
+  --part-chest: #ff5c8a; --part-shoulder: #ff9a56; --part-back: #2fb8a6;
+  --part-leg: #6d5df6; --part-cardio: #c86dd7;
+  background:
+    radial-gradient(1200px 600px at 8% -10%, #ffe3f1 0%, transparent 55%),
+    radial-gradient(1000px 700px at 100% 0%, #d7e4ff 0%, transparent 55%),
+    radial-gradient(900px 600px at 50% 120%, #e3e9ff 0%, transparent 60%),
+    #eef1fb;
+  background-attachment: fixed;
+}
+body[data-skin="gradient"] #sidebar,
+body[data-skin="gradient"] #topbar {
+  background: rgba(255,255,255,.5); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-color: rgba(255,255,255,.7);
+}
+body[data-skin="gradient"] #sidebar nav a.active { box-shadow: 0 8px 18px rgba(109,93,246,.35); }
+body[data-skin="gradient"] .card,
+body[data-skin="gradient"] .work-card,
+body[data-skin="gradient"] .cal-card,
+body[data-skin="gradient"] .detail-card { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+body[data-skin="gradient"] .card:hover,
+body[data-skin="gradient"] .work-card:hover,
+body[data-skin="gradient"] .cal-card:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(90,90,180,.18); transition: .2s; }
+body[data-skin="gradient"] #primary-btn,
+body[data-skin="gradient"] .btn-primary {
+  background: linear-gradient(135deg, #6d5df6, #c86dd7 55%, #ff7ab8);
+  border: none; box-shadow: 0 8px 20px rgba(109,93,246,.4); color: #fff;
+}
+body[data-skin="gradient"] .bar > i { background: linear-gradient(90deg, #6d5df6, #c86dd7, #ff7ab8); }
+body[data-skin="gradient"] .cal-cell.today { background: linear-gradient(135deg, #6d5df6, #c86dd7); }
+body[data-skin="gradient"] .cal-cell.today .cal-daynum,
+body[data-skin="gradient"] .cal-cell.today .cal-part { color: #fff; }
+body[data-skin="gradient"] .cal-check { color: #fff; }
+body[data-skin="gradient"] .big { background: linear-gradient(135deg, #6d5df6, #c86dd7); -webkit-background-clip: text; background-clip: text; color: transparent; }
+body[data-skin="gradient"] .segmented { border: none; box-shadow: 0 4px 14px rgba(90,90,180,.15); }
+body[data-skin="gradient"] .segmented button.active { background: linear-gradient(135deg, #6d5df6, #c86dd7); color: #fff; }
+body[data-skin="gradient"] input[type="text"], body[data-skin="gradient"] input[type="number"],
+body[data-skin="gradient"] input[type="date"], body[data-skin="gradient"] select, body[data-skin="gradient"] textarea {
+  border: 1px solid rgba(255,255,255,.7); background: rgba(255,255,255,.6); backdrop-filter: blur(8px);
+}
+
+/* 现代渐变风暗色版：暗夜霓虹渐变 */
+body[data-skin="gradient"][data-theme="dark"] {
+  --bg: #13122a; --surface: rgba(28,26,58,.6); --text: #eef0ff; --text-soft: #9aa0c8;
+  --border: rgba(160,150,255,.25); --accent: #9a8cff; --on-accent: #13122a;
+  --shadow: 0 10px 34px rgba(0,0,30,.5);
+  --bar-bg: rgba(120,110,220,.18); --chart-fill: rgba(154,140,255,.18);
+  --nav-active-bg: linear-gradient(135deg, #7d6df6, #d06de0); --nav-active-fg: #fff;
+  --part-chest: #ff7da3; --part-shoulder: #ffb880; --part-back: #5ad9c4;
+  --part-leg: #9a8cff; --part-cardio: #e08ae8;
+  background:
+    radial-gradient(1100px 600px at 10% -10%, rgba(80,60,200,.4) 0%, transparent 55%),
+    radial-gradient(900px 700px at 100% 0%, rgba(200,70,180,.28) 0%, transparent 55%),
+    radial-gradient(800px 600px at 50% 120%, rgba(60,120,220,.3) 0%, transparent 60%),
+    #13122a;
+  background-attachment: fixed;
+}
+body[data-skin="gradient"][data-theme="dark"] #sidebar,
+body[data-skin="gradient"][data-theme="dark"] #topbar {
+  background: rgba(20,18,48,.55); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+body[data-skin="gradient"][data-theme="dark"] input[type="text"], body[data-skin="gradient"][data-theme="dark"] input[type="number"],
+body[data-skin="gradient"][data-theme="dark"] input[type="date"], body[data-skin="gradient"][data-theme="dark"] select, body[data-skin="gradient"][data-theme="dark"] textarea {
+  background: rgba(30,28,64,.5); border-color: rgba(160,150,255,.25);
+}
+
+/* =========================================================================
+   5. 赛博朋克风（Cyberpunk）：霓虹（青/品红）+ 扫描线 + 斜切卡片，恒暗、无额外暗色档
+   ========================================================================= */
+body[data-skin="cyber"] {
+  --bg: #08070f; --surface: #121020; --text: #e4e7ff; --text-soft: #7d84ad;
+  --border: #00e5ff; --accent: #00e5ff; --on-accent: #00161a;
+  --accent-2: #ff2bd6; --bw: 1px; --radius: 4px; --radius-sm: 4px;
+  --shadow: 0 0 18px rgba(0,229,255,.18), inset 0 0 0 1px rgba(0,229,255,.18);
+  --bar-bg: #1b1a33; --chart-fill: rgba(0,229,255,.14);
+  --font: ui-monospace, "Cascadia Mono", Consolas, "Microsoft YaHei", monospace;
+  --nav-active-bg: rgba(0,229,255,.12); --nav-active-fg: #00e5ff;
+  --part-chest: #ff2bd6; --part-shoulder: #ffd319; --part-back: #00ff9c;
+  --part-leg: #00e5ff; --part-cardio: #ff5c33;
+}
+body[data-skin="cyber"] #app { position: relative; }
+body[data-skin="cyber"] #app::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 999;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px);
+  mix-blend-mode: overlay;
+}
+body[data-skin="cyber"] #sidebar,
+body[data-skin="cyber"] #topbar {
+  background: rgba(10,9,20,.85); backdrop-filter: blur(6px);
+  border-color: #00e5ff;
+}
+body[data-skin="cyber"] #topbar { border-bottom: 1px solid #00e5ff; box-shadow: 0 0 20px rgba(0,229,255,.35); }
+body[data-skin="cyber"] .brand { text-shadow: 0 0 10px #00e5ff; letter-spacing: 2px; color: var(--accent); }
+body[data-skin="cyber"] #sidebar nav a { letter-spacing: 1px; }
+body[data-skin="cyber"] #sidebar nav a.active { text-shadow: 0 0 8px #00e5ff; box-shadow: inset 0 0 0 1px #00e5ff; }
+body[data-skin="cyber"] #page-title { text-shadow: 0 0 12px rgba(0,229,255,.7); }
+body[data-skin="cyber"] #primary-btn,
+body[data-skin="cyber"] .btn-primary {
+  background: transparent; color: #00e5ff; border: 1px solid #00e5ff;
+  text-shadow: 0 0 8px #00e5ff; box-shadow: 0 0 14px rgba(0,229,255,.4), inset 0 0 10px rgba(0,229,255,.15);
+}
+body[data-skin="cyber"] #primary-btn:hover,
+body[data-skin="cyber"] .btn-primary:hover { background: #00e5ff; color: #00161a; }
+body[data-skin="cyber"] .card,
+body[data-skin="cyber"] .work-card,
+body[data-skin="cyber"] .cal-card,
+body[data-skin="cyber"] .detail-card {
+  background: rgba(18,16,32,.8); border: 1px solid rgba(0,229,255,.35);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+}
+body[data-skin="cyber"] .card h3,
+body[data-skin="cyber"] .work-card-title,
+body[data-skin="cyber"] .cal-title { color: #00e5ff; text-shadow: 0 0 8px rgba(0,229,255,.6); letter-spacing: 1px; }
+body[data-skin="cyber"] .card-link { color: var(--accent-2); text-shadow: 0 0 8px rgba(255,43,214,.6); }
+body[data-skin="cyber"] .big { color: #00e5ff; text-shadow: 0 0 10px rgba(0,229,255,.7); }
+body[data-skin="cyber"] .bar > i { background: linear-gradient(90deg, #00e5ff, #ff2bd6); box-shadow: 0 0 12px rgba(0,229,255,.7); }
+body[data-skin="cyber"] .cal-cell { border-color: rgba(0,229,255,.3); background: rgba(18,16,32,.7); }
+body[data-skin="cyber"] .cal-cell.today { box-shadow: 0 0 14px rgba(0,229,255,.5); border-color: #00e5ff; }
+body[data-skin="cyber"] .cal-cell.today .cal-daynum { color: #00e5ff; }
+body[data-skin="cyber"] .cal-check { color: #00ff9c; text-shadow: 0 0 8px #00ff9c; }
+body[data-skin="cyber"] .cal-part { color: var(--accent-2); text-shadow: 0 0 6px rgba(255,43,214,.6); }
+body[data-skin="cyber"] ul.list li { border-bottom-color: rgba(0,229,255,.15); }
+body[data-skin="cyber"] .segmented { border-color: rgba(0,229,255,.4); }
+body[data-skin="cyber"] .segmented button.active { background: rgba(0,229,255,.15); color: #00e5ff; text-shadow: 0 0 6px #00e5ff; }
+body[data-skin="cyber"] input[type="text"], body[data-skin="cyber"] input[type="number"],
+body[data-skin="cyber"] input[type="date"], body[data-skin="cyber"] select, body[data-skin="cyber"] textarea {
+  background: rgba(10,9,20,.7); border-color: rgba(0,229,255,.35); color: #e4e7ff;
+}
+body[data-skin="cyber"] .btn { background: rgba(10,9,20,.7); border-color: rgba(0,229,255,.35); }
+body[data-skin="cyber"] .btn-danger { color: #ff2bd6; border-color: rgba(255,43,214,.4); }
+body[data-skin="cyber"] .empty-state { color: #7d84ad; }
+/* cyber 恒暗：详情完成横幅改为霓虹绿，避免浅绿底在暗底上突兀 */
+body[data-skin="cyber"] .detail-banner {
+  background: rgba(0,255,156,.08);
+  color: #00ff9c;
+  border: 1px solid rgba(0,255,156,.35);
+}
+
+/* ---------- 深色下通用细节微调（非 cyber，各皮肤暗色档已定义主体变量） ---------- */
+body[data-theme="dark"] .toast { box-shadow: 0 4px 16px rgba(0,0,0,.6); }
+body[data-theme="dark"] .modal-mask { background: rgba(0,0,0,.6); }

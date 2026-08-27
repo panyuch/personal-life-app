@@ -11,8 +11,14 @@ _Avoid_：仪表盘、Dashboard
 **备忘（Memo）**：全局随手记条目 `{text, done}`，不按日期，独立于各业务模块。
 _Avoid_：笔记、Note
 
-**数据与设置（Settings）**：负责备份恢复、昵称/主题设置、清空全部数据的模块。
+**数据与设置（Settings）**：负责备份恢复、昵称/界面风格/深色设置、清空全部数据的模块。
 _Avoid_：设置页
+
+**界面风格（Skin）**：整套可切换的视觉皮肤（野兽派 / 编辑杂志风 / 新拟物派 / 现代渐变风 / 赛博朋克风），存于设置 `theme` 字段；每套亮色风格附专属暗色版，赛博朋克恒暗。
+_Avoid_：主题、换肤（v1.1 前的「主题色 themeColor」已被移除）
+
+**风格键（Theme Key）**：界面风格的白名单标识 `brutal / editorial / neumorph / gradient / cyber`，默认 `brutal`，映射到 `<body data-skin>`。
+_Avoid_：CSS 类名风格切换（应走 `data-skin` 属性）
 
 ### 今日计划
 **今日计划（Today Plan）**：按日期的通用待办，记录与工作/健身/饮食无关的随手杂事；与三个专项模块数据隔离。

@@ -1,6 +1,6 @@
 /*
  * settings.js — 数据与设置（阶段1）
- * 设置：昵称 / 主题色 / 深色开关，改动即时保存 + applyTheme。
+ * 设置：昵称 / 界面风格（5 套皮肤）/ 深色开关，改动即时保存 + applyTheme。
  * 数据：导出备份 / 导入恢复（二次确认）/ 清空（危险二次确认）/ 关于。
  */
 (function () {
@@ -9,7 +9,15 @@
   var UI = W.UI;
   var Store = W.Store;
 
-  var PRESET_COLORS = ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899', '#0ea5e9', '#64748b'];
+  // 界面风格清单（顺序即展示顺序；键与 Store.THEMES 白名单一致）
+  // thumb：缩略图恒显亮色版（内联样式固定亮色，不随深色开关跳变）
+  var SKINS = [
+    { key: 'brutal', name: '野兽派', css: 'background:#efece3;border:3px solid #111;box-shadow:4px 4px 0 #111;', dot: 'background:#ff4d00;' },
+    { key: 'editorial', name: '编辑杂志风', css: 'background:#faf8f4;border-top:3px solid #171512;border-bottom:1px solid #171512;', dot: 'background:#a31f1f;' },
+    { key: 'neumorph', name: '新拟物派', css: 'background:#e4e9f1;box-shadow:inset 3px 3px 6px #c3cad6,inset -3px -3px 6px #fff;', dot: 'background:#6c63ff;border-radius:8px;' },
+    { key: 'gradient', name: '现代渐变风', css: 'background:linear-gradient(135deg,#ffe3f1,#d7e4ff);', dot: 'background:linear-gradient(135deg,#6d5df6,#c86dd7);border-radius:8px;' },
+    { key: 'cyber', name: '赛博朋克风', css: 'background:#08070f;border:1px solid #00e5ff;', dot: 'background:#ff2bd6;' },
+  ];
 
   // ——— 数据操作（被 UI 事件调用）———
   function setNickname(v) {
@@ -17,11 +25,13 @@
     Store.save();
     return Store.data.settings.nickname;
   }
-  function setThemeColor(v) {
-    if (v) Store.data.settings.themeColor = v;
+  function setTheme(key) {
+    // 白名单校验：非法键忽略（不落库）；合法则写库 + 持久化 + 应用主题
+    if ((Store.THEMES || []).indexOf(key) === -1) return Store.data.settings.theme;
+    Store.data.settings.theme = key;
     Store.save();
     if (UI && UI.applyTheme) UI.applyTheme();
-    return Store.data.settings.themeColor;
+    return Store.data.settings.theme;
   }
   function setDarkMode(on) {
     Store.data.settings.darkMode = !!on;
@@ -81,9 +91,12 @@
   // ——— 渲染 ———
   function build() {
     var s = Store.data.settings;
-    var swatches = PRESET_COLORS.map(function (c) {
-      var active = (c === s.themeColor) ? ' active' : '';
-      return '<button class="swatch' + active + '" data-color="' + c + '" style="background:' + c + '"></button>';
+    var skinCards = SKINS.map(function (k) {
+      var active = (k.key === s.theme) ? ' active' : '';
+      return '<button type="button" class="skin-card' + active + '" data-skin="' + k.key + '" data-name="' + UI.escapeHtml(k.name) + '">' +
+        '<span class="skin-thumb" style="' + k.css + '"><i style="' + k.dot + '"></i></span>' +
+        '<span class="skin-name">' + UI.escapeHtml(k.name) + '</span>' +
+        '</button>';
     }).join('');
 
     var html = '';
@@ -93,8 +106,9 @@
     html += '<label class="field"><span>昵称</span>';
     html += '<input type="text" id="set-nickname" value="' + UI.escapeHtml(s.nickname) + '" placeholder="给自己起个名字" /></label>';
 
-    html += '<div class="field"><span>主题色</span><div class="swatches">' + swatches + '</div>';
-    html += '<input type="color" id="set-color" value="' + UI.escapeHtml(s.themeColor) + '" /></div>';
+    html += '<div class="field"><span>界面风格</span>';
+    html += '<div class="skin-grid" id="skin-grid">' + skinCards + '</div>';
+    html += '<p class="card-sub">选择后整个 App 立即换肤并自动保存；开启深色模式后当前风格显示其专属暗色版。</p></div>';
 
     html += '<label class="field row"><span>深色模式</span>';
     html += '<input type="checkbox" id="set-dark"' + (s.darkMode ? ' checked' : '') + ' /></label>';
@@ -135,17 +149,18 @@
       if (UI && UI.toast) UI.toast('昵称已保存', 'success');
     });
 
-    var color = viewEl.querySelector('#set-color');
-    if (color) color.addEventListener('input', function () { setThemeColor(color.value); });
-
-    var swatches = viewEl.querySelectorAll('.swatch');
-    for (var i = 0; i < swatches.length; i++) {
-      swatches[i].addEventListener('click', function () {
-        var c = this.getAttribute('data-color');
-        setThemeColor(c);
-        Router_rerender();
-      });
-    }
+    // 界面风格卡片：点击即时换肤 + 持久化 + toast
+    var skinGrid = viewEl.querySelector('#skin-grid');
+    if (skinGrid) skinGrid.addEventListener('click', function (e) {
+      var card = e.target.closest ? e.target.closest('.skin-card') : null;
+      if (!card) return;
+      var key = card.getAttribute('data-skin');
+      var name = card.getAttribute('data-name') || key;
+      var applied = setTheme(key);
+      if (applied !== key) return; // 非法键被忽略
+      if (UI && UI.toast) UI.toast('已切换至 ' + name, 'success');
+      Router_rerender();
+    });
 
     var dark = viewEl.querySelector('#set-dark');
     if (dark) dark.addEventListener('change', function () {
@@ -189,9 +204,9 @@
   function Router_rerender() { if (W.Router) W.Router.reload(); }
 
   var Settings = {
-    PRESET_COLORS: PRESET_COLORS,
+    SKINS: SKINS,
     setNickname: setNickname,
-    setThemeColor: setThemeColor,
+    setTheme: setTheme,
     setDarkMode: setDarkMode,
     clearAll: clearAll,
     exportBackup: exportBackup,

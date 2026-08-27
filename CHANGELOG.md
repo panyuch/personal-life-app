@@ -1,5 +1,33 @@
 # 变更日志 (CHANGELOG)
 
+## v1.2 — 多风格界面皮肤 + 深色模式（2026-08-28）
+
+### 改动
+- **新增「界面风格」体系**：5 套可切换皮肤（野兽派 / 编辑杂志风 / 新拟物派 / 现代渐变风 / 赛博朋克风），独立样式文件 `assets/themes.css`，外壳在业务样式之后加载。每套亮色风格附专属暗色版（深色开关为全局布尔，切风格不重置明/暗）；赛博朋克恒暗、深色开关对其无额外效果。
+- **数据模型**：设置结构由 `{ nickname, themeColor, darkMode }` 改为 `{ nickname, theme, darkMode }`。旧数据打开时 `themeColor` 被丢弃、`theme` 缺失或非法回落默认 `brutal`、`darkMode` 保留；备份导入/导出自动包含 `theme` 与 `darkMode`。
+- **主题引擎**：`applyTheme()` 成为唯一「设置 → 渲染」转换点，`theme` → `body[data-skin]`、`darkMode` → `body[data-theme="dark"]`，不再写主题色 CSS 变量。
+- **变量统一**：全仓主题色变量 `--theme-color` → `--accent`（旧引用清零）；删除 styles.css 原全局深色变量块，暗色改由各皮肤负责。
+- **设置界面**：删除主题色色块与取色器，新增「界面风格」选择器（5 张缩略图卡片，恒亮色版、当前高亮、点击即时换肤 + toast「已切换至 X」+ 自动保存）；新增 `setTheme()` 设置函数（白名单校验）。
+- **语义色**：训练部位色（胸/肩/背/腿/有氧）按 5 套皮肤各一套主题化（CSS 变量 `--part-*`），暗色版沿用同风格并提亮保证可读。
+- **图表适配**：体重趋势图主色随当前皮肤 `--accent`；明暗判断 = 「深色开启 或 皮肤为暗色（cyber）」。
+
+### 测试
+- 新增 `tests/theming.test.js`（17 项）：设置结构迁移（themeColor 丢弃 / 缺 theme / 非法 theme / 合法保留 / 备份往返）、applyTheme 映射、setTheme 白名单与持久化、风格选择器渲染、部位色 CSS 变量与兜底、图表 cyber 恒暗 / 深色 / 亮色 / 主色随 accent。
+- 更新 `phase0` / `phase1` / `acceptance` 中依赖旧主题色的断言与 mock。
+- 全套 `tests/run-all.js`：**143 项通过，0 失败**。
+
+### 文档
+- theming epic 工单 `.scratch/theming/issues/01`–`06` 全部 resolved；spec `.scratch/theming/spec.md` 标记完成。
+- `CONTEXT.md` 术语表新增「界面风格（Skin）」「风格键（theme key）」词条。
+
+### 迁移提示
+- 老使用者升级后主题色丢失、外观变为默认野兽派（符合「不保留原版」决策）；其余数据不受影响。
+
+### 关联
+- theming spec `.scratch/theming/spec.md`（来源：throwaway 原型 + grilling 4 轮收敛）。
+
+---
+
 ## v1.1.1 — 图表回归原生 SVG，离线零依赖（2026-08-28）
 
 ### 改动
