@@ -178,6 +178,54 @@ H.test('预览卡空态：无训练安排 / 无饮食记录时显示引导', fun
   H.includes(html, '今天还没记录饮食', '三餐空态应引导');
 });
 
+H.section('核心模块预览（工单05：身体数据趋势卡）');
+function seedBodyTrend() {
+  reset();
+  // 乱序插入，验证按日期升序透传给图表
+  Fitness.addBody({ date: '2026-08-20', weight: 69 });
+  Fitness.addBody({ date: '2026-08-16', weight: 71 });
+  Diet.addEntry(REF, 'breakfast', { name: '燕麦', grams: 100, nutrition: { kcal: 200, protein: 30, carb: 40, fat: 10 } });
+  Store.save();
+}
+H.test('身体趋势卡：编号 C、图表容器、宏量条与饮食模块同源、整卡跳转健身', function () {
+  seedBodyTrend();
+  const d = Diet.dailySummary(REF);
+  const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
+  H.includes(html, '<h3 data-no="C">身体数据 · 体重趋势</h3>', '趋势卡标题应含编号 C');
+  H.includes(html, 'id="home-body-chart"', '有身体数据时应有折线容器');
+  H.includes(html, 'href="#/fitness"', '整卡应跳转健身计划');
+  H.includes(html, '<div class="macro-row">', '应含宏量条容器');
+  ['蛋白', '碳水', '脂肪'].forEach(function (mm) {
+    H.includes(html, '<span>' + mm + '</span>', '应含宏量标签' + mm);
+  });
+  H.includes(html, '<b>' + Math.round(d.protein) + 'g</b>', '蛋白值与饮食模块一致');
+  H.includes(html, '<b>' + Math.round(d.carb) + 'g</b>', '碳水值与饮食模块一致');
+  H.includes(html, '<b>' + Math.round(d.fat) + 'g</b>', '脂肪值与饮食模块一致');
+});
+H.test('身体趋势卡图表委托：render 注入假件可断言 dates/weights 升序透传', function () {
+  seedBodyTrend();
+  let called = null;
+  win.Chart = {
+    renderWeightTrend: function (dom, data) { called = { dom: dom, dates: data.dates, weights: data.weights }; },
+    dispose: function () {}
+  };
+  Home.render(win.document.getElementById('view'), win.document.getElementById('topbar'));
+  H.ok(called, '有数据时应调用 renderWeightTrend');
+  H.ok(called.dom, '应传入折线容器');
+  H.eq(called.dates.join(','), '2026-08-16,2026-08-20', 'dates 应按日期升序透传');
+  H.eq(called.weights.join(','), '71,69', 'weights 应与 dates 一一对应');
+});
+H.test('身体趋势卡空态：无身体数据时显示空态、不生成容器、不绘图', function () {
+  reset();
+  const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
+  H.includes(html, '暂无身体数据', '空态应引导');
+  H.notIncludes(html, 'id="home-body-chart"', '无数据时不应有折线容器');
+  let called = false;
+  win.Chart = { renderWeightTrend: function () { called = true; }, dispose: function () {} };
+  Home.render(win.document.getElementById('view'), win.document.getElementById('topbar'));
+  H.notOk(called, '无身体数据时不应调用 renderWeightTrend');
+});
+
 H.section('渲染');
 H.test('render 不抛错（冒烟）', function () {
   seedAll();

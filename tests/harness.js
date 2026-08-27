@@ -36,8 +36,10 @@ function mockEl(id) {
       // 为图表 adapter 测试提供最小可用的子元素桩：
       // - '#fit-chart'：体重趋势图容器（renderWeightTrend 的 dom）
       // - '.fit-root'：每次渲染重建的根容器（事件委托挂点）
+      // - '#home-body-chart'：首页身体数据趋势卡的折线容器（home 委托 W.Chart）
       if (sel === '#fit-chart') return mockEl();
       if (sel === '.fit-root') return mockEl();
+      if (sel === '#home-body-chart') return mockEl();
       return null;
     },
     querySelectorAll() { return []; },

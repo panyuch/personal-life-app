@@ -117,6 +117,29 @@
     return '<a class="card card-link-wrap preview-meals" href="#/diet">' + html + '</a>';
   }
 
+  // 身体数据趋势预览卡：体重折线（委托 W.Chart）+ 蛋白/碳水/脂肪宏量条，整卡跳转健身计划
+  function buildPreviewBodyTrend(date) {
+    var data = W.Fitness ? W.Fitness.trendData() : [];
+    var html = '<h3 data-no="C">身体数据 · 体重趋势</h3>';
+    if (data.length === 0) {
+      html += '<div class="preview-empty">暂无身体数据，去健身计划记录一笔 →</div>';
+    } else {
+      // 折线由 render 阶段注入到 #home-body-chart（委托 W.Chart.renderWeightTrend）
+      html += '<div class="body-chart" id="home-body-chart"></div>';
+    }
+    // 宏量条：蛋白 / 碳水 / 脂肪 当日值（与饮食模块 dailySummary 同源，无目标故按相对最大比例呈现）
+    var m = W.Diet ? W.Diet.dailySummary(date) : { protein: 0, carb: 0, fat: 0 };
+    var max = Math.max(m.protein, m.carb, m.fat);
+    function barW(v) { return max > 0 ? Math.round(v / max * 100) : 0; }
+    html += '<div class="macro-row">';
+    [['蛋白', m.protein], ['碳水', m.carb], ['脂肪', m.fat]].forEach(function (mm) {
+      html += '<div class="macro"><span>' + mm[0] + '</span><div class="mbar"><i style="width:' + barW(mm[1]) + '%"></i></div><b>' + Math.round(mm[1]) + 'g</b></div>';
+    });
+    html += '</div>';
+    html += '<div class="card-sub">点击进入健身计划 →</div>';
+    return '<a class="card card-link-wrap preview-body" href="#/fitness">' + html + '</a>';
+  }
+
   // ——— 渲染 ———
   function build(ctx) {
     ctx = ctx || {};
@@ -191,11 +214,12 @@
 
     html += '</div>'; // grid
 
-    // 核心模块预览（第二区块：健身月历 / 饮食三餐 只读预览卡，可点击跳转）
+    // 核心模块预览（第二区块：健身月历 / 饮食三餐 / 身体趋势 只读预览卡，可点击跳转）
     html += '<div class="section-title">核心模块预览</div>';
     html += '<div class="grid">';
     html += buildPreviewCalendar(now);
     html += buildPreviewMeals(date);
+    html += buildPreviewBodyTrend(date);
     html += '</div>';
 
     return html;
@@ -240,6 +264,15 @@
       if (e.target.classList.contains('home-memo-check')) { memoToggle(id); W.Router.reload(); }
       else if (e.target.classList.contains('home-memo-del')) { memoRemove(id); W.Router.reload(); }
     });
+    // 身体数据趋势折线：委托 W.Chart 绘制（仅在有数据时，无数据卡内无容器、天然跳过）
+    var chartEl = viewEl.querySelector('#home-body-chart');
+    if (chartEl && W.Chart && W.Chart.renderWeightTrend) {
+      var bd = W.Fitness ? W.Fitness.trendData() : [];
+      if (bd.length) W.Chart.renderWeightTrend(chartEl, {
+        dates: bd.map(function (d) { return d.date; }),
+        weights: bd.map(function (d) { return d.weight; })
+      });
+    }
   }
 
   var Home = {

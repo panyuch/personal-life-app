@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** done
+**Status:** resolved
 
 - [x] 区块标题「核心模块预览」带分隔线样式
 - [x] 月历卡展示当月训练部位与完成 ✓，部位色随界面风格

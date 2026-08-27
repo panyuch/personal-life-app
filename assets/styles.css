@@ -460,3 +460,12 @@ body[data-theme="dark"] .detail-banner { color: #4ade80; border-color: #166534; 
   color: var(--text-soft); font-size: 13px; padding: 14px 0; text-align: center;
   border: 1px dashed var(--border); border-radius: 10px; margin-top: 10px;
 }
+
+/* 身体数据趋势卡（体重折线容器 + 宏量条） */
+.body-chart { margin: 4px 0 6px; min-height: 120px; }
+.macro-row { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.macro { display: grid; grid-template-columns: 44px 1fr 56px; align-items: center; gap: 10px; font-size: 13px; }
+.macro span { color: var(--text-soft); }
+.macro .mbar { height: 10px; border-radius: 999px; background: var(--bar-bg, var(--border)); overflow: hidden; }
+.macro .mbar > i { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+.macro b { text-align: right; font-weight: 700; }
