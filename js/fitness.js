@@ -6,8 +6,8 @@
  *  3) 选择部位后，日程表该日以醒目大字显示部位名称。
  *  4) 点击日程表中的训练部位，跳转新页面，展示当日 5 个训练动作。
  *  5) 当日 5 个动作全部完成，日程表当天右下角显示绿色「√」。
- *  6) 日程表下方用 ECharts 展示身体数据变化，提供「记录」按钮，输入年月日+体重(kg)后实时更新图表。
- * 依赖：本地内置 js/vendor/echarts.min.js（全局 echarts），离线可用。
+ *  6) 日程表下方用原生 SVG 展示身体数据变化（W.Chart adapter，零依赖），提供「记录」按钮，输入年月日+体重(kg)后实时更新图表。
+ * 依赖：js/chart.js（原生 SVG，离线零依赖，不再依赖 ECharts）。
  */
 (function () {
   'use strict';
@@ -31,7 +31,6 @@
 
   // 视图状态（月历翻月、选中某天）——模块级保持，避免翻月/返回丢状态
   var viewState = { year: 0, month: 0, selectedDate: '' };
-  var chart = null; // ECharts 实例
 
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
   function fmtDateWeek(dateStr) {
@@ -179,55 +178,7 @@
     };
   }
 
-  // ——— ECharts 体重趋势 ———
-  function getThemeColor() {
-    try {
-      var v = W.getComputedStyle(W.document.documentElement).getPropertyValue('--theme-color');
-      return (v && v.trim()) || '#3b82f6';
-    } catch (e) { return '#3b82f6'; }
-  }
-  function isDark() { return !!(W.document.body && W.document.body.getAttribute('data-theme') === 'dark'); }
-  function hexToRgba(hex, a) {
-    hex = (hex || '').trim();
-    if (hex[0] !== '#') return hex;
-    var h = hex.slice(1);
-    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
-    var r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
-    return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
-  }
-  function disposeChart() { unbindResize(); if (chart) { try { chart.dispose(); } catch (e) {} chart = null; } }
-
-  function renderChart(dom) {
-    if (!W.echarts || !dom) return;
-    disposeChart();
-    chart = W.echarts.init(dom);
-    bindResize();
-    var data = trendData();
-    var dates = data.map(function (d) { return d.date; });
-    var weights = data.map(function (d) { return d.weight; });
-    var themeColor = getThemeColor();
-    var dark = isDark();
-    var axisColor = dark ? '#94a3b8' : '#6b7280';
-    var splitColor = dark ? '#334155' : '#e5e7eb';
-    chart.setOption({
-      grid: { left: 46, right: 18, top: 18, bottom: 28 },
-      tooltip: { trigger: 'axis', valueFormatter: function (v) { return v + ' kg'; } },
-      xAxis: {
-        type: 'category', data: dates, boundaryGap: false,
-        axisLabel: { color: axisColor, fontSize: 11 }, axisLine: { lineStyle: { color: splitColor } }
-      },
-      yAxis: {
-        type: 'value', scale: true, name: 'kg', nameTextStyle: { color: axisColor, fontSize: 11 },
-        axisLabel: { color: axisColor, fontSize: 11 }, splitLine: { lineStyle: { color: splitColor } }
-      },
-      series: [{
-        name: '体重', type: 'line', smooth: true, data: weights,
-        symbol: 'circle', symbolSize: 6,
-        itemStyle: { color: themeColor }, lineStyle: { color: themeColor, width: 2 },
-        areaStyle: { color: hexToRgba(themeColor, 0.12) }
-      }]
-    });
-  }
+  // ——— 体重趋势（绘制委托给 W.Chart adapter，见 js/chart.js）———
 
   // ——— 顶栏 ———
   function setTopbar(topbar, title, dateStr) {
@@ -304,9 +255,9 @@
     html += '<div class="card"><div class="cal-body-head"><h3>身体数据</h3><button class="btn btn-primary" id="fit-record-btn">记录</button></div>';
     var data = trendData();
     if (data.length === 0) {
-      html += '<div class="echart-empty">暂无身体数据，点「记录」添加体重</div>';
+      html += '<div class="chart-empty">暂无身体数据，点「记录」添加体重</div>';
     } else {
-      html += '<div id="fit-chart" class="echart-box"></div>';
+      html += '<div id="fit-chart" class="chart-box"></div>';
     }
     if (data.length) {
       html += '<ul class="list" style="margin-top:12px">';
@@ -327,9 +278,15 @@
     var root = viewEl.querySelector('.fit-root');
     if (!root) return; // 无 DOM 环境（如测试基座）下安全跳过绑定
     bindCalendar(root);
-    // 初始化 ECharts（仅在有数据时）
-    var dom = root.querySelector('#fit-chart');
-    if (dom) renderChart(dom);
+    // 体重趋势图：仅在有数据时委托 W.Chart 绘制（零依赖原生 SVG）
+    var data = trendData();
+    if (data.length && W.Chart && W.Chart.renderWeightTrend) {
+      var dom = root.querySelector('#fit-chart');
+      if (dom) W.Chart.renderWeightTrend(dom, {
+        dates: data.map(function (d) { return d.date; }),
+        weights: data.map(function (d) { return d.weight; })
+      });
+    }
   }
 
   function bindCalendar(viewEl) {
@@ -392,7 +349,7 @@
   }
 
   function renderDetail(dateStr, viewEl, topbar) {
-    disposeChart();
+    if (W.Chart) W.Chart.dispose();
     // 校验日期格式
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) { W.location.hash = '#/fitness'; return; }
     setTopbar(topbar, '训练详情', fmtDateWeek(dateStr));
@@ -432,22 +389,8 @@
     renderCalendar(viewEl, topbar);
   }
 
-  // 窗口缩放时重绘图表：仅在图表创建后按需绑定（且仅一次），disposeChart 时解绑，
-  // 既避免在 Node 测试基座（mock window 无 addEventListener）加载即崩溃，也消除全局监听泄漏。
-  function onResize() { if (chart) { try { chart.resize(); } catch (e) {} } }
-  function bindResize() {
-    if (W.__fitResizeBound) return;
-    if (typeof W.addEventListener === 'function') {
-      W.addEventListener('resize', onResize);
-      W.__fitResizeBound = true;
-    }
-  }
-  function unbindResize() {
-    if (W.__fitResizeBound && typeof W.removeEventListener === 'function') {
-      W.removeEventListener('resize', onResize);
-    }
-    W.__fitResizeBound = false;
-  }
+  // 窗口缩放重绘与 resize 监听的生命周期已随图表逻辑移入 W.Chart adapter（js/chart.js）：
+  // renderWeightTrend 时 bind、dispose 时 unbind，从结构上消除原 BUG-004 的全局监听泄漏。
 
   var Fitness = {
     PARTS: PARTS, DEFAULT_EXERCISES: DEFAULT_EXERCISES,

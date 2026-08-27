@@ -32,7 +32,14 @@ function mockEl(id) {
     style: { setProperty() {}, getPropertyValue() { return ''; } },
     appendChild() {},
     removeChild() {},
-    querySelector() { return null; },
+    querySelector(sel) {
+      // 为图表 adapter 测试提供最小可用的子元素桩：
+      // - '#fit-chart'：体重趋势图容器（renderWeightTrend 的 dom）
+      // - '.fit-root'：每次渲染重建的根容器（事件委托挂点）
+      if (sel === '#fit-chart') return mockEl();
+      if (sel === '.fit-root') return mockEl();
+      return null;
+    },
     querySelectorAll() { return []; },
     classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
     focus() {},

@@ -15,6 +15,7 @@ const files = [
   'phase5.test.js',
   'diet-modules.test.js',
   'phase6.test.js',
+  'chart-seam.test.js',
   'acceptance.test.js',
 ];
 

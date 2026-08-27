@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>我的专属 App</title>
   <link rel="stylesheet" href="assets/styles.css" />
-  <!-- ECharts 本地内置（vendored），双击 file:// 离线可用，不依赖 CDN -->
-  <script src="js/vendor/echarts.min.js"></script>
 </head>
 <body>
   <div id="app">
@@ -34,6 +32,7 @@
   <!-- 加载顺序：数据层 → 工具 → 路由 → 各视图 → 入口（经典 script，file:// 可用） -->
   <script src="js/store.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/chart.js"></script>
   <script src="js/router.js"></script>
   <script src="js/home.js"></script>
   <script src="js/today.js"></script>
