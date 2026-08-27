@@ -54,6 +54,69 @@
     return limit ? items.slice(0, limit) : items;
   }
 
+  // ——— 核心模块预览（第二区块，只读预览卡，可点击跳转）———
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+  // 健身月历预览卡：只读迷你月历，读当月训练日程；不翻月 / 不选中 / 不设置部位，整卡跳转健身计划
+  function buildPreviewCalendar(now) {
+    var y = now.getFullYear(), m = now.getMonth();
+    var first = new Date(y, m, 1);
+    var startDay = first.getDay();
+    var lead = (startDay === 0) ? 6 : startDay - 1; // 周一为一周起点（与健身模块一致）
+    var daysInMonth = new Date(y, m + 1, 0).getDate();
+    var hasAny = false;
+    var cells = '';
+    var i;
+    for (i = 0; i < lead; i++) cells += '<div class="cal-cell cal-blank"></div>';
+    for (i = 1; i <= daysInMonth; i++) {
+      var ds = y + '-' + pad2(m + 1) + '-' + pad2(i);
+      var inner = '<div class="cal-daynum">' + i + '</div>';
+      var day = W.Fitness ? W.Fitness.getDay(ds) : null;
+      if (day && day.part) {
+        hasAny = true;
+        inner += '<span class="cal-part" style="color:' + W.Fitness.getPartColor(day.part) + '">' + UI.escapeHtml(day.part) + '</span>';
+        if (W.Fitness.dayComplete(ds)) inner += '<span class="cal-check" title="已完成">✓</span>';
+      }
+      cells += '<div class="cal-cell">' + inner + '</div>';
+    }
+    // 补齐最后一行到 7 的倍数（与健身模块一致）
+    var total = lead + daysInMonth;
+    var rem = total % 7;
+    if (rem !== 0) { for (var k = 0; k < 7 - rem; k++) cells += '<div class="cal-cell cal-blank"></div>'; }
+    var weekdays = ['一', '二', '三', '四', '五', '六', '日'].map(function (w) { return '<div class="cal-wd">' + w + '</div>'; }).join('');
+
+    var html = '<h3 data-no="A">健身 · ' + y + '年' + (m + 1) + '月训练日程</h3>';
+    html += '<div class="mini-cal">';
+    html += '<div class="cal-weekdays">' + weekdays + '</div>';
+    html += '<div class="cal-grid">' + cells + '</div>';
+    html += '</div>';
+    if (!hasAny) html += '<div class="preview-empty">本月还没有训练安排，去健身计划看看 →</div>';
+    return '<a class="card card-link-wrap preview-cal" href="#/fitness">' + html + '</a>';
+  }
+
+  // 饮食三餐预览卡：当日四餐（早餐/午餐/晚餐/加餐）真实「饮食记录条目」，整卡跳转饮食计划
+  function buildPreviewMeals(date) {
+    var meals = (W.Diet && W.Diet.MEALS) || [];
+    var day = W.Diet ? W.Diet.getDay(date) : null;
+    var hasAny = false;
+    var html = '<h3 data-no="B">饮食 · 今日三餐</h3>';
+    meals.forEach(function (m) {
+      var items = (day && day.meals && day.meals[m.key]) || [];
+      if (items.length) hasAny = true;
+      html += '<div class="meal"><div class="meal-head">' + UI.escapeHtml(m.label) + '</div><div class="meal-items">';
+      if (items.length === 0) {
+        html += '<span class="meal-none">还没记录</span>';
+      } else {
+        items.forEach(function (it) {
+          html += '<span>' + UI.escapeHtml(it.name) + ' ' + String(it.grams) + 'g · ' + Math.round(it.nutrition.kcal) + 'kcal</span>';
+        });
+      }
+      html += '</div></div>';
+    });
+    if (!hasAny) html += '<div class="preview-empty">今天还没记录饮食，去饮食计划记一笔 →</div>';
+    return '<a class="card card-link-wrap preview-meals" href="#/diet">' + html + '</a>';
+  }
+
   // ——— 渲染 ———
   function build(ctx) {
     ctx = ctx || {};
@@ -127,6 +190,14 @@
     html += '<div class="card-sub">点击进入饮食计划 →</div></a>';
 
     html += '</div>'; // grid
+
+    // 核心模块预览（第二区块：健身月历 / 饮食三餐 只读预览卡，可点击跳转）
+    html += '<div class="section-title">核心模块预览</div>';
+    html += '<div class="grid">';
+    html += buildPreviewCalendar(now);
+    html += buildPreviewMeals(date);
+    html += '</div>';
+
     return html;
   }
 

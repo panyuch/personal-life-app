@@ -427,3 +427,36 @@ body[data-theme="dark"] .detail-banner { color: #4ade80; border-color: #166534; 
   .cal-head { flex-direction: column; align-items: stretch; gap: 8px; }
   .cal-head-right { justify-content: space-between; }
 }
+
+/* ===== 首页 · 核心模块预览（第二区块） ===== */
+/* 分节标题：标题文本 + 右侧分隔线 */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-display, var(--font));
+  font-size: 17px;
+  font-weight: 800;
+  margin: 34px 0 16px;
+}
+.section-title::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+/* 迷你月历（只读预览，复用 .cal-* 基础样式并收紧尺寸） */
+.mini-cal { margin-top: 4px; }
+.preview-cal .cal-cell { min-height: 46px; padding: 4px 6px; cursor: default; }
+.preview-cal .cal-cell:hover { background: var(--surface); }
+.preview-cal .cal-part { font-size: 15px; margin-top: 3px; cursor: default; text-align: center; }
+.preview-cal .cal-check { font-size: 13px; right: 5px; bottom: 4px; }
+
+/* 三餐卡（早餐 / 午餐 / 晚餐 / 加餐） */
+.meal { border-top: 1px solid var(--border); padding: 8px 0; }
+.meal:first-of-type { border-top: none; }
+.meal-head { font-size: 13px; font-weight: 700; color: var(--text-soft); margin-bottom: 4px; }
+.meal-items { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 13px; }
+.meal-none { color: var(--text-soft); }
+
+/* 预览卡空态引导 */
+.preview-empty {
+  color: var(--text-soft); font-size: 13px; padding: 14px 0; text-align: center;
+  border: 1px dashed var(--border); border-radius: 10px; margin-top: 10px;
+}

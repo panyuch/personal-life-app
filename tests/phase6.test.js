@@ -123,6 +123,61 @@ H.test('首页勾选今日项与各模块同步（通过 Home.toggle 路径）',
   H.eq(Home.memoFind ? Store.data.today.find(function (t) { return t.text === '买菜'; }).done : null, true, '今日计划模块应同步为完成');
 });
 
+H.section('核心模块预览（工单04：健身月历 + 三餐卡）');
+function seedPreview() {
+  reset();
+  Store.data.settings.nickname = '阿明';
+  Fitness.setPart(REF, '背'); // 2026-08-17 背（未完成）
+  Fitness.setPart('2026-08-10', '胸');
+  var day = Fitness.getDay('2026-08-10');
+  day.exercises.forEach(function (e) { e.done = true; }); // 8-10 全部完成
+  Store.save();
+  Diet.addEntry(REF, 'breakfast', { name: '燕麦', grams: 40, nutrition: { kcal: 150 } });
+  Diet.addEntry(REF, 'lunch', { name: '鸡胸肉', grams: 150, nutrition: { kcal: 165 } });
+}
+H.test('区块标题「核心模块预览」带分隔线样式', function () {
+  seedPreview();
+  const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
+  H.includes(html, '<div class="section-title">核心模块预览</div>', '应含分节标题');
+});
+H.test('健身月历卡：当月部位+完成✓，部位色随皮肤，整卡跳转健身', function () {
+  seedPreview();
+  const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
+  H.includes(html, '<h3 data-no="A">健身 · 2026年8月训练日程</h3>', '月历卡标题应含编号 A 与当月');
+  H.includes(html, 'href="#/fitness"', '整卡应跳转健身计划');
+  ['一', '二', '三', '四', '五', '六', '日'].forEach(function (w) {
+    H.includes(html, '<div class="cal-wd">' + w + '</div>', '表头应含周' + w);
+  });
+  H.includes(html, '<span class="cal-part" style="color:' + Fitness.getPartColor('背') + '">背</span>', '应显示训练部位与部位色（背）');
+  H.includes(html, '<span class="cal-part" style="color:' + Fitness.getPartColor('胸') + '">胸</span>', '应显示训练部位与部位色（胸）');
+  H.includes(html, '<span class="cal-check" title="已完成">✓</span>', '全部完成的日期应显示 ✓');
+});
+H.test('健身月历预览卡只读：无翻月/选中/设置入口', function () {
+  seedPreview();
+  const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
+  H.notIncludes(html, 'data-cal-prev', '不应有上个月按钮');
+  H.notIncludes(html, 'data-cal-next', '不应有下个月按钮');
+  H.notIncludes(html, 'fit-settings-btn', '不应有设置按钮');
+  H.notIncludes(html, 'data-nav=', '部位不应可点击跳详情');
+});
+H.test('饮食三餐卡：四餐标题+真实条目+整卡跳转饮食', function () {
+  seedPreview();
+  const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
+  H.includes(html, '<h3 data-no="B">饮食 · 今日三餐</h3>', '三餐卡标题应含编号 B');
+  H.includes(html, 'href="#/diet"', '整卡应跳转饮食计划');
+  ['早餐', '午餐', '晚餐', '加餐'].forEach(function (m) {
+    H.includes(html, '<div class="meal-head">' + m + '</div>', '应含餐次' + m);
+  });
+  H.includes(html, '燕麦 40g · 150kcal', '早餐条目应与饮食模块同源');
+  H.includes(html, '鸡胸肉 150g · 165kcal', '午餐条目应与饮食模块同源');
+});
+H.test('预览卡空态：无训练安排 / 无饮食记录时显示引导', function () {
+  reset();
+  const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
+  H.includes(html, '本月还没有训练安排', '月历空态应引导');
+  H.includes(html, '今天还没记录饮食', '三餐空态应引导');
+});
+
 H.section('渲染');
 H.test('render 不抛错（冒烟）', function () {
   seedAll();
