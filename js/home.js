@@ -58,11 +58,7 @@
     var w = W.Work ? W.Work.summary() : { plans: 0, items: 0, done: 0 };
     var f = W.Fitness ? W.Fitness.summary(date) : { trainedToday: null, latestWeight: null };
     var dSum = W.Diet ? W.Diet.dailySummary(date) : { kcal: 0 };
-    var dGoal = (W.Diet && W.Diet.getActiveGoal) ? W.Diet.getActiveGoal(date) : null;
-    var dTarget = dGoal ? dGoal.targetKcal : null;
     var dHasFood = W.Diet ? W.Diet.hasAnyFood(date) : false;
-    var dTrained = (W.Fitness && W.Fitness.summary) ? W.Fitness.summary(date).trainedToday : null;
-    var dWeight = (W.Diet && W.Diet.getLatestWeight) ? W.Diet.getLatestWeight() : null;
 
     var html = '';
     // 问候条
@@ -110,12 +106,9 @@
     var weightText = f.latestWeight ? ('最近体重 ' + f.latestWeight.weight + 'kg (' + UI.escapeHtml(f.latestWeight.date) + ')') : '暂无体重记录';
     html += '<div class="card-sub">' + UI.escapeHtml(weightText) + ' →</div></a>';
 
-    // 饮食摘要卡
+    // 饮食摘要卡（是否已记录 + 今日热量，无目标对比）
     html += '<a class="card card-link-wrap" href="#/diet"><h3>饮食计划</h3>';
     var dietText = dHasFood ? ('今日已记录 · 热量 ' + Math.round(dSum.kcal) + ' kcal') : '今日还没记录';
-    if (dTarget != null) dietText += ' · 距目标 ' + Math.round(dTarget - dSum.kcal) + ' kcal';
-    if (dTrained) dietText += ' · 今日已训(' + dTrained + ')';
-    if (dWeight) dietText += ' · 体重 ' + dWeight.weight + 'kg';
     html += '<p class="big">' + UI.escapeHtml(dietText) + '</p>';
     html += '<div class="card-sub">点击进入饮食计划 →</div></a>';
 

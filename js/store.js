@@ -12,30 +12,16 @@
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   }
 
-  // ——— 饮食模块默认结构（v2）———
+  // ——— 饮食模块默认结构（v3-lite，纯记录 + 当日汇总）———
   // 仅含字段默认值；迁移逻辑见 migrateDiet()。
+  // 数据模型：
+  //   foods[]     = { id, name, per100g:{kcal,protein,carb,fat} }
+  //   days[date]  = { meals:{breakfast:[],lunch:[],dinner:[],snack:[]}, waterMl }
   function defaultDiet() {
     return {
-      version: 2,
-      // 目标计算身体参数（体重可选取自健身）
-      profile: { sex: null, age: null, heightCm: null, weightKg: null, useFitnessWeight: true },
-      // 饮食目标设定
-      goals: {
-        type: null, // 'cut' | 'maintain' | 'bulk'
-        method: 'auto', // 'auto' | 'manual'
-        activity: 'moderate', // 'sedentary'|'light'|'moderate'|'high'
-        targetKcal: null,
-        macroTarget: { protein: null, carb: null, fat: null },
-        macroRatio: { protein: 30, carb: 40, fat: 30 },
-        applyFrom: null, // 'YYYY-MM-DD'
-      },
-      restrictions: [], // { id, kind, name, note }
-      foods: [], // 食材库（食材级，每100g 营养）
-      recipes: [], // 食谱库
-      mealsOrder: ['breakfast', 'lunch', 'dinner', 'snack'],
-      mealLabels: { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '加餐' },
-      mealTemplates: [], // { id, name, meal, items }
-      days: {}, // 'YYYY-MM-DD' -> day
+      version: 3,
+      foods: [], // 精简食材库：{ id, name, per100g:{kcal,protein,carb,fat} }
+      days: {}, // 'YYYY-MM-DD' -> { meals:{breakfast,lunch,dinner,snack}, waterMl }
     };
   }
 
@@ -56,117 +42,47 @@
   function num(v) { var n = Number(v); return isNaN(n) ? 0 : n; }
   function str(v, d) { v = (v == null ? '' : String(v)).trim(); return v || (d != null ? d : ''); }
 
-  // ——— 饮食模块 v1→v2 迁移（同时兼容已是 v2 的数据）———
-  // 老字段：targetKcal / foods[{id,name,kcal,protein,carb,fat}] / days[date].meals[meal][{id,name,kcal,protein,carb,fat}]
-  // 新字段：见 defaultDiet()。老 entries 补 grams=100、nutrition 取原值；老 foods 补 per100g/category/tags/aliases。
+  // ——— 饮食模块 v2→v3-lite 迁移（同时兼容 v1）———
+  // 丢弃：goals / profile / restrictions / recipes / mealTemplates / mealsOrder / mealLabels / 自定义餐次。
+  // 保留：days（仅四个固定餐次 breakfast/lunch/dinner/snack + waterMl）+ foods（仅 per100g，丢弃 category/tags/aliases）。
+  // 任何结构非法时整体回退默认，不阻断应用打开。
   function migrateDiet(src) {
     var diet = defaultDiet();
     if (!src || typeof src !== 'object') return diet;
-    var isV2 = src.version === 2;
 
-    // profile
-    if (src.profile && typeof src.profile === 'object') {
-      var p = src.profile;
-      diet.profile = {
-        sex: (p.sex === 'male' || p.sex === 'female') ? p.sex : null,
-        age: p.age != null ? num(p.age) : null,
-        heightCm: p.heightCm != null ? num(p.heightCm) : null,
-        weightKg: p.weightKg != null ? num(p.weightKg) : null,
-        useFitnessWeight: p.useFitnessWeight == null ? true : !!p.useFitnessWeight,
-      };
-    }
-
-    // goals（v2 结构化；v1 仅 targetKcal）
-    if (src.goals && typeof src.goals === 'object') {
-      var g = src.goals;
-      var types = ['cut', 'maintain', 'bulk'];
-      var acts = ['sedentary', 'light', 'moderate', 'high'];
-      diet.goals = {
-        type: types.indexOf(g.type) >= 0 ? g.type : null,
-        method: g.method === 'manual' ? 'manual' : 'auto',
-        activity: acts.indexOf(g.activity) >= 0 ? g.activity : 'moderate',
-        targetKcal: g.targetKcal != null ? num(g.targetKcal) : null,
-        macroTarget: {
-          protein: (g.macroTarget && g.macroTarget.protein != null) ? num(g.macroTarget.protein) : null,
-          carb: (g.macroTarget && g.macroTarget.carb != null) ? num(g.macroTarget.carb) : null,
-          fat: (g.macroTarget && g.macroTarget.fat != null) ? num(g.macroTarget.fat) : null,
-        },
-        macroRatio: {
-          protein: (g.macroRatio && g.macroRatio.protein != null) ? num(g.macroRatio.protein) : 30,
-          carb: (g.macroRatio && g.macroRatio.carb != null) ? num(g.macroRatio.carb) : 40,
-          fat: (g.macroRatio && g.macroRatio.fat != null) ? num(g.macroRatio.fat) : 30,
-        },
-        applyFrom: g.applyFrom != null ? String(g.applyFrom) : null,
-      };
-    } else if (src.targetKcal != null) {
-      // v1：标量目标 → 手填模式
-      diet.goals.targetKcal = num(src.targetKcal);
-      diet.goals.method = 'manual';
-    }
-
-    // restrictions
-    if (Array.isArray(src.restrictions)) {
-      diet.restrictions = src.restrictions.map(function (r) {
-        var kinds = ['allergy', 'intolerance', 'dislike', 'medical'];
-        return {
-          id: r.id || uid(),
-          kind: kinds.indexOf(r.kind) >= 0 ? r.kind : 'dislike',
-          name: str(r.name, '未命名'),
-          note: r.note || '',
-        };
-      });
-    }
-
-    // foods（食材库）
+    // foods：精简，丢弃 category/tags/aliases，仅留 per100g
     if (Array.isArray(src.foods)) {
       diet.foods = src.foods.map(function (f) {
         if (f.per100g && typeof f.per100g === 'object') {
           return {
             id: f.id || uid(),
             name: str(f.name, '未命名'),
-            category: str(f.category, '其他'),
             per100g: {
               kcal: num(f.per100g.kcal), protein: num(f.per100g.protein),
               carb: num(f.per100g.carb), fat: num(f.per100g.fat),
-              fiber: num(f.per100g.fiber), sodium: num(f.per100g.sodium),
             },
-            tags: Array.isArray(f.tags) ? f.tags.slice() : [],
-            aliases: Array.isArray(f.aliases) ? f.aliases.slice() : [],
           };
         }
         // v1 食物：原 kcal/protein/carb/fat 视作“整份”，默认 per100g 取原值、grams 记为 100
         return {
           id: f.id || uid(),
           name: str(f.name, '未命名'),
-          category: '其他',
-          per100g: { kcal: num(f.kcal), protein: num(f.protein), carb: num(f.carb), fat: num(f.fat), fiber: 0, sodium: 0 },
-          tags: [],
-          aliases: [],
+          per100g: { kcal: num(f.kcal), protein: num(f.protein), carb: num(f.carb), fat: num(f.fat) },
         };
       });
     }
 
-    // recipes / mealTemplates / mealsOrder / mealLabels
-    if (Array.isArray(src.recipes)) diet.recipes = src.recipes.map(function (r) { return r; });
-    if (Array.isArray(src.mealTemplates)) diet.mealTemplates = src.mealTemplates.map(function (t) { return t; });
-    if (Array.isArray(src.mealsOrder) && src.mealsOrder.length) diet.mealsOrder = src.mealsOrder.slice();
-    if (src.mealLabels && typeof src.mealLabels === 'object') {
-      Object.keys(src.mealLabels).forEach(function (k) { diet.mealLabels[k] = str(src.mealLabels[k], k); });
-    }
-
-    // days
+    // days：仅保留四个固定餐次 + 饮水；丢弃 goalSnapshot / trainingBonusKcal / note / 自定义餐次
+    var CANON = ['breakfast', 'lunch', 'dinner', 'snack'];
     var daysSrc = (src.days && typeof src.days === 'object') ? src.days : {};
     Object.keys(daysSrc).forEach(function (date) {
       var sd = daysSrc[date] || {};
       var day = {
-        goalSnapshot: sd.goalSnapshot || null,
-        trainingBonusKcal: sd.trainingBonusKcal != null ? num(sd.trainingBonusKcal) : 0,
+        meals: { breakfast: [], lunch: [], dinner: [], snack: [] },
         waterMl: sd.waterMl != null ? num(sd.waterMl) : 0,
-        note: sd.note != null ? String(sd.note) : '',
-        meals: {},
       };
       var mealsSrc = (sd.meals && typeof sd.meals === 'object') ? sd.meals : {};
-      diet.mealsOrder.forEach(function (m) {
+      CANON.forEach(function (m) {
         var arr = Array.isArray(mealsSrc[m]) ? mealsSrc[m] : [];
         day.meals[m] = arr.map(function (it) {
           var n = (it.nutrition && typeof it.nutrition === 'object') ? it.nutrition : null;
@@ -184,11 +100,10 @@
           };
         });
       });
-      diet.mealsOrder.forEach(function (m) { if (!day.meals[m]) day.meals[m] = []; });
       diet.days[date] = day;
     });
 
-    diet.version = 2;
+    diet.version = 3;
     return diet;
   }
 

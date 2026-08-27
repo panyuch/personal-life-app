@@ -58,7 +58,6 @@ function seedAll() {
   Fitness.addBody({ date: '2026-08-20', weight: 69 });
   // diet
   Diet.addEntry(REF, 'breakfast', { name: 'x', grams: 100, nutrition: { kcal: 300 } });
-  Diet.setTarget(600);
 }
 H.test('首页工作摘要与各模块一致', function () {
   seedAll();
@@ -75,14 +74,12 @@ H.test('首页健身摘要与各模块一致', function () {
   H.includes(html, '今天已训练：' + f.trainedToday, '训练名应一致');
   H.includes(html, '最近体重 ' + f.latestWeight.weight + 'kg (' + f.latestWeight.date + ')', '最近体重及日期应一致');
 });
-H.test('首页饮食摘要与各模块一致', function () {
+H.test('首页饮食摘要与各模块一致（是否已记录 + 今日热量）', function () {
   seedAll();
   const d = Diet.dailySummary(REF);
-  const t = Diet.getActiveGoal(REF).targetKcal;
   const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
+  H.includes(html, '今日已记录', '有记录时显示已记录');
   H.includes(html, '热量 ' + Math.round(d.kcal) + ' kcal', '热量应一致');
-  H.includes(html, '距目标', '应显示距目标');
-  H.includes(html, '距目标 ' + Math.round(t - d.kcal) + ' kcal', '距目标剩余数应一致');
 });
 H.test('首页含问候、今日项、各模块入口链接', function () {
   seedAll();
