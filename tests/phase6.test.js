@@ -84,12 +84,25 @@ H.test('首页饮食摘要与各模块一致（是否已记录 + 今日热量）
 H.test('首页含问候、今日项、各模块入口链接', function () {
   seedAll();
   const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
-  H.includes(html, '早上好，阿明', '应含问候+昵称');
+  H.includes(html, '早上好，<em>阿明</em>', '应含问候+昵称');
   H.includes(html, '买菜', '应含今日未完成项');
   H.includes(html, 'href="#/today"', '应有今日计划入口');
   H.includes(html, 'href="#/work"', '应有工作入口');
   H.includes(html, 'href="#/fitness"', '应有健身入口');
   H.includes(html, 'href="#/diet"', '应有饮食入口');
+});
+H.test('问候条为独立区块（非卡片）且副文案反映未完成待办数', function () {
+  seedAll(); // 今日 1 条未完成（买菜）
+  const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
+  H.includes(html, '<div id="greeting">', '问候应为独立区块');
+  H.notIncludes(html, 'class="card greet"', '问候不应再是卡片');
+  H.includes(html, '今天有 1 件待办，保持节奏。', '副文案应显示未完成待办数');
+});
+H.test('无待办时问候条副文案显示鼓励文案', function () {
+  reset();
+  Store.data.settings.nickname = '阿明';
+  const html = Home.build({ now: new Date(2026, 7, 17, 9), date: REF });
+  H.includes(html, '今天没有待办', '无待办应显示鼓励文案');
 });
 H.test('首页勾选今日项与各模块同步（通过 Home.toggle 路径）', function () {
   seedAll();

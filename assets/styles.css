@@ -93,6 +93,17 @@ body {
 #primary-btn:hover { filter: brightness(0.9); }
 #view { padding: 24px 28px; }
 
+/* 问候条（首页顶部，独立区块、非卡片） */
+#greeting { margin-bottom: 22px; }
+#greeting .hello {
+  font-family: var(--font-display, var(--font));
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0 0 4px;
+  line-height: 1.2;
+}
+#greeting .sub { color: var(--text-soft); font-size: 14px; margin: 0; }
+
 /* 卡片网格 */
 .grid {
   display: grid;

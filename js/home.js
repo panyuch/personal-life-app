@@ -16,6 +16,12 @@
     return '晚上好';
   }
 
+  // 问候条副文案：动态反映今日未完成待办数；0 件时给鼓励文案
+  function greetingSub(n) {
+    if (n > 0) return '今天有 ' + n + ' 件待办，保持节奏。';
+    return '今天没有待办，放松一下，或规划明天吧。';
+  }
+
   // ——— 快速备忘 (memo) ———
   function memoAdd(text) {
     text = (text == null ? '' : String(text)).trim();
@@ -54,15 +60,19 @@
     var now = ctx.now || new Date();
     var date = ctx.date || UI.todayStr(now);
     var nick = (Store.data.settings.nickname || '').trim();
-    var greet = greeting(now) + (nick ? '，' + nick : '');
+    var greet = greeting(now);
+    var incomplete = todayIncomplete(date).length;
     var w = W.Work ? W.Work.summary() : { plans: 0, items: 0, done: 0 };
     var f = W.Fitness ? W.Fitness.summary(date) : { trainedToday: null, latestWeight: null };
     var dSum = W.Diet ? W.Diet.dailySummary(date) : { kcal: 0 };
     var dHasFood = W.Diet ? W.Diet.hasAnyFood(date) : false;
 
     var html = '';
-    // 问候条
-    html += '<div class="card greet"><h2>' + UI.escapeHtml(greet) + '</h2><div class="card-sub">' + UI.escapeHtml(UI.fmtDate(date)) + '</div></div>';
+    // 问候条（独立区块，非卡片）
+    html += '<div id="greeting">';
+    html += '<p class="hello">' + UI.escapeHtml(greet) + (nick ? '，<em>' + UI.escapeHtml(nick) + '</em>' : '') + '</p>';
+    html += '<p class="sub">' + UI.escapeHtml(greetingSub(incomplete)) + '</p>';
+    html += '</div>';
 
     html += '<div class="grid">';
 
@@ -159,6 +169,7 @@
 
   var Home = {
     greeting: greeting,
+    greetingSub: greetingSub,
     memoAdd: memoAdd, memoToggle: memoToggle, memoRemove: memoRemove, memoFind: memoFind,
     todayIncomplete: todayIncomplete,
     build: build, render: render,
