@@ -45,6 +45,9 @@ body {
 }
 #sidebar nav { display: flex; flex-direction: column; gap: 4px; }
 #sidebar nav a {
+  display: flex;
+  align-items: center;
+  gap: 11px;
   text-decoration: none;
   color: var(--text-soft);
   padding: 10px 14px;
@@ -52,6 +55,8 @@ body {
   font-weight: 500;
   transition: background 0.15s, color 0.15s;
 }
+/* 导航图标：与文字同行排列，固定宽度居中，避免文字错位 */
+.nav-ico { width: 20px; flex: 0 0 20px; text-align: center; font-size: 15px; line-height: 1; }
 #sidebar nav a:hover { background: var(--bg); color: var(--text); }
 #sidebar nav a.active {
   background: color-mix(in srgb, var(--accent) 14%, transparent);

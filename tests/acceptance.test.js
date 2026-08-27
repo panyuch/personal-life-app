@@ -117,6 +117,23 @@ H.test('index.html 使用经典 script 且无 CDN/type=module', function () {
   H.ok(/<script src="js\//.test(html), '应引用本地 js/ 脚本');
 });
 
+H.section('侧边栏导航图标（home-restructure · 工单01）');
+H.test('六个导航项各含对应图标', function () {
+  const html = read(path.join(ROOT, 'index.html'));
+  H.includes(html, '<span class="nav-ico">◉</span>首页总览', '首页总览图标');
+  H.includes(html, '<span class="nav-ico">☐</span>今日计划', '今日计划图标');
+  H.includes(html, '<span class="nav-ico">▤</span>工作计划', '工作计划图标');
+  H.includes(html, '<span class="nav-ico">◍</span>健身计划', '健身计划图标');
+  H.includes(html, '<span class="nav-ico">◔</span>饮食计划', '饮食计划图标');
+  H.includes(html, '<span class="nav-ico">◈</span>数据与设置', '数据与设置图标');
+});
+H.test('导航图标样式已定义且与文字同行', function () {
+  const css = read(path.join(ROOT, 'assets', 'styles.css'));
+  H.includes(css, '.nav-ico', 'styles.css 应定义 .nav-ico');
+  const navA = css.match(/#sidebar nav a\s*\{([\s\S]*?)\}/);
+  H.ok(navA && /display:\s*flex/.test(navA[1]), '导航链接应为 flex 布局（图标与文字同行）');
+});
+
 H.section('PRD §10 验收清单（程序化可检项）');
 H.test('导出可下载 .json（文件名格式）', function () {
   reset();
