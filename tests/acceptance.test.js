@@ -134,6 +134,33 @@ H.test('导航图标样式已定义且与文字同行', function () {
   H.ok(navA && /display:\s*flex/.test(navA[1]), '导航链接应为 flex 布局（图标与文字同行）');
 });
 
+H.section('五套皮肤差异化 + 720px 窄屏（home-restructure · 工单06）');
+H.test('五套皮肤各自覆盖新增组件（图标/数字条/分节标题/宏量条/三餐/空态）', function () {
+  const css = read(path.join(ROOT, 'assets', 'themes.css'));
+  const skins = ['brutal', 'editorial', 'neumorph', 'gradient', 'cyber'];
+  const comps = ['.nav-ico', '.stat', '.section-title', '.macro', '.meal', '.preview-empty'];
+  skins.forEach(function (s) {
+    comps.forEach(function (c) {
+      H.includes(css, 'body[data-skin="' + s + '"] ' + c, '皮肤 ' + s + ' 应差异化覆盖 ' + c);
+    });
+  });
+});
+H.test('暗色皮肤档存在（cyber 恒暗除外）', function () {
+  const css = read(path.join(ROOT, 'assets', 'themes.css'));
+  ['brutal', 'editorial', 'neumorph', 'gradient'].forEach(function (s) {
+    H.includes(css, 'body[data-skin="' + s + '"][data-theme="dark"]', '皮肤 ' + s + ' 应有暗色档');
+  });
+  H.notIncludes(css, 'body[data-skin="cyber"][data-theme="dark"]', 'cyber 恒暗不应有暗色档');
+});
+H.test('720px 窄屏：侧栏转顶部导航、新组件收紧不溢出', function () {
+  const css = read(path.join(ROOT, 'assets', 'styles.css'));
+  const media = css.match(/@media \(max-width: 720px\)\s*\{([\s\S]*?)\n\}/);
+  H.ok(media, 'styles.css 应含 720px 断点');
+  H.includes(media[1], '#sidebar', '窄屏应处理侧边栏');
+  H.includes(media[1], '.stat-row', '窄屏应收紧数字条');
+  H.includes(media[1], '.preview-cal', '窄屏应收紧预览月历');
+});
+
 H.section('PRD §10 验收清单（程序化可检项）');
 H.test('导出可下载 .json（文件名格式）', function () {
   reset();

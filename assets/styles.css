@@ -333,6 +333,13 @@ ul.list li .grow { flex: 1; min-width: 0; }
   #view { padding: 16px; }
   .work-card-head { flex-direction: column; align-items: stretch; gap: 10px; }
   .work-card-head-right { justify-content: flex-start; }
+  /* 首页新结构窄屏适配：卡片网格单列、数字条/分节标题收紧、预览月历紧凑不溢出 */
+  .section-title { margin: 24px 0 12px; font-size: 15px; }
+  .stat-row { gap: 12px; }
+  .stat b { font-size: 20px; }
+  .preview-cal .cal-cell { min-height: 40px; padding: 3px 4px; }
+  .preview-cal .cal-part { font-size: 13px; }
+  .macro { grid-template-columns: 40px 1fr 52px; gap: 8px; }
 }
 
 /* ===== 健身计划·月历日程表（重构） ===== */
