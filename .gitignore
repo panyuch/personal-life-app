@@ -8,8 +8,15 @@ Thumbs.db
 *.swp
 *~
 
+# 原型/临时页面（不入版本控制）
+prototype-ui-styles.html
+seed-demo.html
+
 # 依赖与构建产物
 node_modules/
 dist/
 build/
 *.log
+
+# 本地临时文件（截图/演示数据注入等）
+.tmp/
